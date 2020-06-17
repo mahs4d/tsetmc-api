@@ -1,0 +1,8 @@
+setup.py
+lib/tsetmc_api/__init__.py
+lib/tsetmc_api/tsetmc.py
+lib/tsetmc_api.egg-info/PKG-INFO
+lib/tsetmc_api.egg-info/SOURCES.txt
+lib/tsetmc_api.egg-info/dependency_links.txt
+lib/tsetmc_api.egg-info/requires.txt
+lib/tsetmc_api.egg-info/top_level.txt
