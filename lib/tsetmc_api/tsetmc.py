@@ -34,11 +34,11 @@ def get_intraday_history(i, d):
     return vars
 
 
-def get_daily_history(symbol_i, offset=999999):
+def get_daily_history(symbol_i, limit=999999):
     ret = []
 
     daily_content = requests.get(
-        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={symbol_i}&Top={offset}&A=0').text
+        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={symbol_i}&Top={limit}&A=0').text
 
     raw_ticks = daily_content.split(';')
 
