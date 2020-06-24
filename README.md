@@ -10,7 +10,7 @@ first install library using pip:
 pip3 install tsetmc-api
 ```
 
-after that in your code:
+### Getting Daily Price Ticks of Asset
 
 ```python
 import tsetmc_api
@@ -18,4 +18,12 @@ import tsetmc_api
 daily_ticks = tsetmc_api.get_daily_history('778253364357513')
 ```
 
-you can find symbol_i of any stock from it's webpage url in tsetmc (the i query).
+you can find asset_id of any stock from it's webpage url in tsetmc (the i query).
+
+### Getting Client Type History of Asset
+
+```python
+import tsetmc_api
+
+client_type_history = tsetmc_api.get_client_type_history('778253364357513')
+```

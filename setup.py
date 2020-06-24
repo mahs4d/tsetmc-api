@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='tsetmc-api',
-    version='0.1.2',
+    version='0.2.0',
     package_dir={'': 'lib'},
     packages=['tsetmc_api'],
     install_requires=['requests>=2', 'beautifulsoup4>=4'],
