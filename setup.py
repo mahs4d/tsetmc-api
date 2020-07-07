@@ -5,7 +5,7 @@ setup(
     version='0.2.1',
     package_dir={'': 'lib'},
     packages=['tsetmc_api'],
-    install_requires=['requests>=2', 'beautifulsoup4>=4'],
+    install_requires=['requests>=2', 'beautifulsoup4>=4', 'lxml>=4'],
     url='https://github.com/mahs4d/tsetmc-api',
     license='MIT',
     author='Mahdi Sadeghi',
