@@ -1,5 +1,7 @@
 import json
 import math
+import os
+import pickle
 import re
 
 import requests
@@ -8,7 +10,7 @@ from bs4 import BeautifulSoup
 _intraday_pattern = re.compile("var (?P<name>.*)=(?P<content>\[[^;]*\]);")
 
 
-def _load_script_vars(asset_id, year, month, day):
+def _load_script_vars_from_web(asset_id, year, month, day):
     d = f'{year:04}{month:02}{day:02}'
     script_variables = {}
 
@@ -37,6 +39,31 @@ def _load_script_vars(asset_id, year, month, day):
         script_variables[match[0]] = json.loads(match[1].replace('\'', '"'))
 
     return script_variables
+
+
+def _exists_script_vars_file(cache_address, asset_id, year, month, day):
+    os.makedirs(cache_address, exist_ok=True)
+    filepath = os.path.join(cache_address, f'{asset_id}_{year}_{month:02}_{day:02}.pickle')
+
+    return os.path.isfile(filepath)
+
+
+def _load_script_vars_from_file(cache_address, asset_id, year, month, day):
+    os.makedirs(cache_address, exist_ok=True)
+    filepath = os.path.join(cache_address, f'{asset_id}_{year}_{month:02}_{day:02}.pickle')
+
+    with open(filepath, 'rb') as fp:
+        script_vars = pickle.load(fp)
+
+    return script_vars
+
+
+def _save_script_vars_to_file(cache_address, asset_id, year, month, day, script_vars):
+    os.makedirs(cache_address, exist_ok=True)
+    filepath = os.path.join(cache_address, f'{asset_id}_{year}_{month:02}_{day:02}.pickle')
+
+    with open(filepath, 'wb') as fp:
+        pickle.dump(script_vars, fp)
 
 
 def _extract_asset_details_data(script_vars):
@@ -189,7 +216,7 @@ def _create_snapshot(price_data, orders_data, distinct=True):
 
 
 class AssetDayDetails:
-    def __init__(self, asset_id, year, month, day):
+    def __init__(self, asset_id, year, month, day, use_cache, cache_address):
         """
         :param asset_id:
         :param year: gregorian year
@@ -201,10 +228,14 @@ class AssetDayDetails:
         self.month = month
         self.day = day
 
-        self._load_raw_data()
+        self._load_raw_data(use_cache=use_cache, cache_address=cache_address)
 
-    def _load_raw_data(self):
-        script_vars = _load_script_vars(self.asset_id, self.year, self.month, self.day)
+    def _load_raw_data(self, use_cache, cache_address):
+        if not use_cache or not _exists_script_vars_file(cache_address, self.asset_id, self.year, self.month, self.day):
+            script_vars = _load_script_vars_from_web(self.asset_id, self.year, self.month, self.day)
+            _save_script_vars_to_file(cache_address, self.asset_id, self.year, self.month, self.day, script_vars)
+        else:
+            script_vars = _load_script_vars_from_file(cache_address, self.asset_id, self.year, self.month, self.day)
 
         self._asset_details = _extract_asset_details_data(script_vars)
         self._price_data = _extract_price_data(script_vars)

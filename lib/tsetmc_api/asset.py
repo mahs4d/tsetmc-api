@@ -1,3 +1,5 @@
+from os import path
+
 import requests
 
 from .day_details import AssetDayDetails
@@ -135,8 +137,9 @@ class Asset:
         client_type_history = _extract_client_type_history(raw_client_type_data)
         return client_type_history
 
-    def get_day_details(self, year, month, day):
-        return AssetDayDetails(self.asset_id, year, month, day)
+    def get_day_details(self, year, month, day, use_cache=True,
+                        cache_address=path.expanduser('~/.tsetmc-api/intraday-cache')):
+        return AssetDayDetails(self.asset_id, year, month, day, use_cache=use_cache, cache_address=cache_address)
 
     @staticmethod
     def find_asset(q):
