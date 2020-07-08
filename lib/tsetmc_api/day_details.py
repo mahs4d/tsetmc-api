@@ -64,8 +64,6 @@ def _extract_price_data(script_vars):
     last_state = state_data[0][1] if len(state_data) > 1 else 'A '  # todo: convert to enum
 
     # Price Data
-    yesterday_close_price = None
-    open_price = None
     price_data = []
     for cpd in script_vars['ClosingPriceData']:
         continuous_time = int(cpd[12])
@@ -77,39 +75,40 @@ def _extract_price_data(script_vars):
             else:
                 next_state_change_time = math.inf
 
-        yesterday_close_price = int(cpd[5])
-        open_price = cpd[4]
         price_data.append({
-            'time': continuous_time,
-            'last_price': int(cpd[2]),
-            'close_price': int(cpd[3]),
-            'high_price': int(cpd[6]),
-            'low_price': int(cpd[7]),
-            'trade_count': int(cpd[8]),
-            'volume': int(cpd[9]),
-            'value': int(cpd[10]),
-            'state': last_state,
+            't': continuous_time,
+            'lst': int(cpd[2]),
+            'y': int(cpd[5]),
+            'o': int(cpd[4]),
+            'c': int(cpd[3]),
+            'h': int(cpd[6]),
+            'l': int(cpd[7]),
+            'cnt': int(cpd[8]),
+            'v': int(cpd[9]),
+            's': last_state,
         })
 
-    return open_price, yesterday_close_price, price_data
+    price_data.sort(key=lambda x: x['t'])
+    return price_data
 
 
 def _extract_orders_data(script_vars):
     orders = []
     for bld in script_vars['BestLimitData']:
         order = {
-            'time': bld[0],
+            't': bld[0],
             'rank': int(bld[1]),
-            'buy_count': int(bld[2]),
-            'buy_volume': int(bld[3]),
-            'buy_price': int(bld[4]),
-            'sell_count': int(bld[7]),
-            'sell_volume': int(bld[6]),
-            'sell_price': int(bld[5]),
+            'bcnt': int(bld[2]),
+            'bv': int(bld[3]),
+            'bp': int(bld[4]),
+            'scnt': int(bld[7]),
+            'sv': int(bld[6]),
+            'sp': int(bld[5]),
         }
 
         orders.append(order)
 
+    orders.sort(key=lambda x: x['t'])
     return orders
 
 
@@ -117,9 +116,9 @@ def _extract_trade_data(script_vars):
     trades = [
         {
             'order': int(x[0]),
-            'time': int(f'{x[1][:2]}{x[1][3:5]}{x[1][6:]}'),
-            'volume': int(x[2]),
-            'price': int(x[3]),
+            't': int(f'{x[1][:2]}{x[1][3:5]}{x[1][6:]}'),
+            'v': int(x[2]),
+            'p': int(x[3]),
         }
         for x in script_vars['IntraTradeData']
     ]
@@ -131,22 +130,62 @@ def _extract_share_holders_data(script_vars):
     share_holders = []
     for shd in script_vars['ShareHolderData']:
         share_holders.append({
-            'shareholder_id': shd[0],
+            'id': shd[0],
             'shares_count': shd[2],
             'shares_percent': shd[3],
-            'shareholder_name': shd[5],
+            'name': shd[5],
         })
 
     yesterday_share_holders = []
     for shd in script_vars['ShareHolderDataYesterday']:
         yesterday_share_holders.append({
-            'shareholder_id': shd[0],
+            'id': shd[0],
             'shares_count': shd[2],
             'shares_percent': shd[3],
-            'shareholder_name': shd[5],
+            'name': shd[5],
         })
 
     return yesterday_share_holders, share_holders
+
+
+def _create_snapshot(price_data, orders_data, distinct=True):
+    max_t = price_data['t']
+    snapshot = {
+        't': max_t,
+        'lst': price_data['lst'],
+        'y': price_data['y'],
+        'o': price_data['o'],
+        'c': price_data['c'],
+        'l': price_data['l'],
+        'cnt': price_data['cnt'],
+        'v': price_data['v'],
+        's': price_data['s'],
+    } if distinct else price_data
+
+    buy_orders = []
+    sell_orders = []
+    for to in orders_data:
+        if to is not None:
+            buy_orders.append({
+                't': to['t'],
+                'cnt': to['bcnt'],
+                'v': to['bv'],
+                'p': to['bp'],
+            })
+            sell_orders.append({
+                't': to['t'],
+                'cnt': to['scnt'],
+                'vol': to['sv'],
+                'p': to['sp'],
+            })
+
+            max_t = max(max_t, to['t'])
+
+    snapshot['t'] = max_t
+    snapshot['buy'] = buy_orders
+    snapshot['sell'] = sell_orders
+
+    return snapshot
 
 
 class AssetDayDetails:
@@ -168,9 +207,9 @@ class AssetDayDetails:
         script_vars = _load_script_vars(self.asset_id, self.year, self.month, self.day)
 
         self._asset_details = _extract_asset_details_data(script_vars)
-        self._open_price, self._yesterday_close_price, self._price_data = _extract_price_data(script_vars)
+        self._price_data = _extract_price_data(script_vars)
 
-        if not self._open_price:
+        if not self._price_data:
             raise Exception('there is no data for this asset in the specified date')
 
         self._yesterday_shareholders, self._shareholders = _extract_share_holders_data(script_vars)
@@ -185,17 +224,6 @@ class AssetDayDetails:
         :rtype: object
         """
         return self._asset_details
-
-    def get_open_price(self):
-        return self._open_price
-
-    def get_yesterday_close_price(self):
-        """
-        returns close price of the previous day
-        :return: yesterday close price
-        :rtype: int
-        """
-        return self._yesterday_close_price
 
     def get_shareholders(self):
         """
@@ -214,7 +242,7 @@ class AssetDayDetails:
     def get_trades(self):
         """
         returns list of trades resided in this day
-        :return: [{ order, time, volume, price }]
+        :return: list of trades
         """
         return self._trades
 
@@ -225,14 +253,7 @@ class AssetDayDetails:
         :param hour:
         :param minute:
         :param seconds:
-        :return: [{
-            time,
-            close_price, high_price, low_price, last_price,
-            state,
-            trade_count, value, volume,
-            buy_orders: [ { time, count, volume, price } ],
-            sell_orders: [ { time, count, volume, price } ],
-        }]
+        :return: list of snapshots
         """
 
         # generate time value
@@ -242,9 +263,9 @@ class AssetDayDetails:
         t_price_data = []
         prev_price_data = None
         for pd in self._price_data:
-            if pd['time'] == t:
+            if pd['t'] == t:
                 t_price_data.append(pd)
-            elif pd['time'] > t:
+            elif pd['t'] > t:
                 if not t_price_data:
                     t_price_data.append(prev_price_data)
                 break
@@ -260,7 +281,7 @@ class AssetDayDetails:
         for od in self._orders_data:
             rank = od['rank'] - 1
             if t_orders[rank] is None:
-                if od['time'] > t:
+                if od['t'] > t:
                     t_orders[rank] = prev_orders_data[rank]
                     if None not in t_orders:
                         break
@@ -272,22 +293,22 @@ class AssetDayDetails:
         for to in t_orders:
             if to is not None:
                 buy_orders.append({
-                    'time': to['time'],
-                    'count': to['buy_count'],
-                    'volume': to['buy_volume'],
-                    'price': to['buy_price'],
+                    't': to['t'],
+                    'cnt': to['bcnt'],
+                    'v': to['bv'],
+                    'p': to['bp'],
                 })
                 sell_orders.append({
-                    'time': to['time'],
-                    'count': to['sell_count'],
-                    'volume': to['sell_volume'],
-                    'price': to['sell_price'],
+                    't': to['t'],
+                    'cnt': to['scnt'],
+                    'v': to['sv'],
+                    'p': to['sp'],
                 })
 
         # generate detailed ticks
         for tp in t_price_data:
-            tp['buy_orders'] = buy_orders
-            tp['sell_orders'] = sell_orders
+            tp['buy'] = buy_orders
+            tp['sell'] = sell_orders
 
         return t_price_data
 
@@ -297,13 +318,76 @@ class AssetDayDetails:
         :param hour:
         :param minute:
         :param seconds:
-        :return: {
-            time,
-            close_price, high_price, low_price, last_price,
-            state,
-            trade_count, value, volume,
-            buy_orders: [ { time, count, volume, price } ],
-            sell_orders: [ { time, count, volume, price } ],
-        }
+        :return: single snapshot
         """
         return self.get_all_snapshots_at(hour, minute, seconds)[-1]
+
+    def get_all_snapshots(self):
+        max_pdi = len(self._price_data)
+        max_odi = len(self._orders_data)
+        pdi = 0
+        odi = -1
+        last_price_data = self._price_data[pdi]
+        last_orders_data = [None, None, None]
+
+        while True:
+            phase = -1
+            if pdi + 1 < max_pdi and odi + 1 < max_odi:
+                if self._price_data[pdi + 1]['t'] < self._orders_data[odi + 1]['t']:
+                    phase = 1
+                elif self._price_data[pdi + 1]['t'] > self._orders_data[odi + 1]['t']:
+                    phase = 2
+                else:
+                    phase = 3
+            else:
+                if pdi + 1 == max_pdi and odi + 1 == max_odi:
+                    break
+                elif pdi + 1 < max_pdi:
+                    phase = 1
+                elif odi + 1 < max_odi:
+                    phase = 2
+
+            # step price data and use the old order data
+            if phase == 1 or phase == 3:
+                pdi += 1
+                last_price_data = self._price_data[pdi]
+
+            # step orders
+            if phase == 2 or phase == 3:
+                t = self._orders_data[odi + 1]['t']
+                orders_found = [None, None, None]
+                while True:
+                    if odi + 1 >= max_odi:
+                        break
+
+                    order = self._orders_data[odi + 1]
+                    rank = order['rank'] - 1
+                    if orders_found[rank] is not None or order['t'] > t:
+                        break
+
+                    odi += 1
+                    orders_found[rank] = order
+                    last_orders_data[rank] = order
+
+            yield _create_snapshot(last_price_data, last_orders_data)
+
+    def pick_snapshots_at(self, pick_times):
+        ll = []
+        pick_times.sort()
+        pti = 0
+        all_snapshots = self.get_all_snapshots()
+
+        prev_snapshot = None
+        for snapshot in all_snapshots:
+            if snapshot['t'] > pick_times[pti]:
+                pti += 1
+
+                if prev_snapshot is not None:
+                    ll.append(prev_snapshot)
+
+                if pti == len(pick_times):
+                    break
+
+            prev_snapshot = snapshot.copy()
+
+        return ll

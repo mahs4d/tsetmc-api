@@ -1,1 +1,1 @@
-from .tsetmc import *
+from .asset import Asset
