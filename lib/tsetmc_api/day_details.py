@@ -15,7 +15,7 @@ def _load_script_vars_from_web(asset_id, year, month, day):
     script_variables = {}
 
     # get data from url
-    daily_content = requests.get(f'http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i={asset_id}&d={d}').text
+    daily_content = requests.get(f'http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i={asset_id}&d={d}', timeout=5).text
 
     # find and get script tags
     all_scripts = BeautifulSoup(daily_content, 'lxml').find_all('script')
@@ -241,7 +241,7 @@ class AssetDayDetails:
         self._price_data = _extract_price_data(script_vars)
 
         if not self._price_data:
-            raise Exception('there is no data for this asset in the specified date')
+            raise ValueError('there is no data for this asset in the specified date')
 
         self._yesterday_shareholders, self._shareholders = _extract_share_holders_data(script_vars)
         self._trades = _extract_trade_data(script_vars)
@@ -392,7 +392,7 @@ class AssetDayDetails:
                         break
 
                     order = self._orders_data[odi + 1]
-                    rank = order['rank'] - 1
+                    rank = min(order['rank'] - 1, 2)
                     if orders_found[rank] is not None or order['t'] > t:
                         break
 
@@ -414,11 +414,10 @@ class AssetDayDetails:
                 pti += 1
 
                 if prev_snapshot is not None:
-                    ll.append(prev_snapshot)
+                    prev_snapshot['pt'] = pick_times[pti - 1]
+                    yield prev_snapshot
 
                 if pti == len(pick_times):
                     break
 
             prev_snapshot = snapshot.copy()
-
-        return ll

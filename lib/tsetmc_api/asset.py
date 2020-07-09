@@ -1,5 +1,7 @@
+import json
 from os import path
 
+import pkg_resources
 import requests
 
 from .day_details import AssetDayDetails
@@ -9,8 +11,9 @@ from .day_details import AssetDayDetails
 
 def _load_raw_daily_history(asset_id, limit):
     daily_content = requests.get(
-        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={asset_id}&Top={limit}&A=0').text
-
+        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={asset_id}&Top={limit}&A=0',
+        timeout=5).text
+    print('loaded')
     raw_ticks = daily_content.split(';')
 
     return raw_ticks
@@ -54,7 +57,7 @@ def _extract_daily_history(raw_ticks):
 # region client type
 
 def _load_raw_client_type_data(asset_id):
-    client_types_raw = requests.get(f'http://www.tsetmc.com/tsev2/data/clienttype.aspx?i={asset_id}').text
+    client_types_raw = requests.get(f'http://www.tsetmc.com/tsev2/data/clienttype.aspx?i={asset_id}', timeout=5).text
     client_types_raw = client_types_raw.split(';')
 
     return client_types_raw
@@ -106,7 +109,7 @@ def _extract_client_type_history(raw_client_type_data):
 # region search assets
 
 def _find_asset(q):
-    search_raw = requests.get(f'http://www.tsetmc.com/tsev2/data/search.aspx?skey={q}').text.split(';')
+    search_raw = requests.get(f'http://www.tsetmc.com/tsev2/data/search.aspx?skey={q}', timeout=5).text.split(';')
 
     if not search_raw or search_raw[0] == '':
         return None
@@ -151,3 +154,17 @@ class Asset:
         return Asset(asset_id=search_result['id'],
                      short_name=search_result['short_name'],
                      full_name=search_result['full_name'])
+
+    @staticmethod
+    def get_assets():
+        """
+        this list is by no means complete
+        """
+        json_path = pkg_resources.resource_filename('tsetmc_api', 'data/assets.json')
+        with open(json_path, 'r') as fp:
+            parsed = json.load(fp)
+            assets = [Asset(asset_id=asset_identifier['id'],
+                            short_name=asset_identifier['short_name'],
+                            full_name=asset_identifier['full_name']) for asset_identifier in parsed]
+
+        return assets
