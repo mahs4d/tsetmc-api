@@ -53,6 +53,7 @@ def generate_watch_events(assets, year, month, day, pick_times):
             picked_snapshots = details.pick_snapshots_at(pick_times)
 
             for i, picked_snapshot in enumerate(picked_snapshots):
+                picked_snapshot['id'] = asset.asset_id
                 events[i]['payload']['assets'].append(picked_snapshot)
         except ValueError:
             continue
