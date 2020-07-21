@@ -1,3 +1,4 @@
+import datetime
 import json
 import math
 import os
@@ -6,6 +7,7 @@ import re
 
 import requests
 from bs4 import BeautifulSoup
+from dateutil import tz as timezoneutil
 
 _intraday_pattern = re.compile("var (?P<name>.*)=(?P<content>\[[^;]*\]);")
 
@@ -182,6 +184,7 @@ def _create_snapshot(price_data, orders_data, distinct=True):
         'lst': price_data['lst'],
         'y': price_data['y'],
         'o': price_data['o'],
+        'h': price_data['h'],
         'c': price_data['c'],
         'l': price_data['l'],
         'cnt': price_data['cnt'],
@@ -202,7 +205,7 @@ def _create_snapshot(price_data, orders_data, distinct=True):
             sell_orders.append({
                 't': to['t'],
                 'cnt': to['scnt'],
-                'vol': to['sv'],
+                'v': to['sv'],
                 'p': to['sp'],
             })
 
@@ -213,6 +216,22 @@ def _create_snapshot(price_data, orders_data, distinct=True):
     snapshot['sell'] = sell_orders
 
     return snapshot
+
+
+def _to_timestamp(year, month, day, pt, tz):
+    z = str(pt)
+    if len(z) == 5:
+        hour = int(z[:1])
+        minute = int(z[1:3])
+        second = int(z[3:])
+        timestamp = datetime.datetime(year, month, day, hour, minute, second, 0, tzinfo=tz)
+    else:
+        hour = int(z[:2])
+        minute = int(z[2:4])
+        second = int(z[4:])
+        timestamp = datetime.datetime(year, month, day, hour, minute, second, 0, tzinfo=tz)
+
+    return int(timestamp.timestamp())
 
 
 class AssetDayDetails:
@@ -227,6 +246,7 @@ class AssetDayDetails:
         self.year = year
         self.month = month
         self.day = day
+        self._timezone = timezoneutil.gettz('Asia/Tehran')
 
         self._load_raw_data(use_cache=use_cache, cache_address=cache_address)
 
@@ -343,16 +363,6 @@ class AssetDayDetails:
 
         return t_price_data
 
-    def get_snapshot_at(self, hour, minute, seconds):
-        """
-        returns single(last) snapshot of asset at the specified time of the day
-        :param hour:
-        :param minute:
-        :param seconds:
-        :return: single snapshot
-        """
-        return self.get_all_snapshots_at(hour, minute, seconds)[-1]
-
     def get_all_snapshots(self):
         max_pdi = len(self._price_data)
         max_odi = len(self._orders_data)
@@ -402,20 +412,67 @@ class AssetDayDetails:
 
             yield _create_snapshot(last_price_data, last_orders_data)
 
-    def pick_snapshots_at(self, pick_times):
-        ll = []
-        pick_times.sort()
-        pti = 0
-        all_snapshots = self.get_all_snapshots()
+    def get_snapshots_by_resolution(self, resolution_name, resolution_step):
+        """
+        :param resolution_name: string
+        :param resolution_step: in seconds
+        """
+        start_time = datetime.datetime(self.year, self.month, self.day, 5, 0, 0, tzinfo=self._timezone)
+        end_time = datetime.datetime(self.year, self.month, self.day, 20, 0, 0, tzinfo=self._timezone)
+        delta = datetime.timedelta(seconds=resolution_step)
 
+        pick_times = []
+        last_time = start_time
+        while True:
+            pick_times.append(int(f'{last_time.hour}{last_time.minute:02}{last_time.second:02}'))
+            last_time = last_time + delta
+            if last_time >= end_time:
+                break
+
+        all_snapshots = self.get_all_snapshots()
+        pti = 0
         prev_snapshot = None
         for snapshot in all_snapshots:
             if snapshot['t'] > pick_times[pti]:
-                pti += 1
+                ptime = pick_times[pti]
+
+                while pti != len(pick_times) and snapshot['t'] > pick_times[pti]:
+                    pti += 1
 
                 if prev_snapshot is not None:
-                    prev_snapshot['pt'] = pick_times[pti - 1]
-                    yield prev_snapshot
+                    yielded_obj = {
+                        'asset_id': self.asset_id,
+                        'resolution': resolution_name,
+                        'time': _to_timestamp(self.year, self.month, self.day, ptime, self._timezone),
+                        'o': prev_snapshot['o'],
+                        'h': prev_snapshot['h'],
+                        'c': prev_snapshot['c'],
+                        'l': prev_snapshot['l'],
+                        'lst': prev_snapshot['lst'],
+                        'v': prev_snapshot['v'],
+                        'cnt': prev_snapshot['cnt'],
+                        'buy': [],
+                        'sell': [],
+                        'state': prev_snapshot['s'],
+                    }
+
+                    for buy in prev_snapshot['buy']:
+                        yielded_obj['buy'].append({
+                            't': _to_timestamp(self.year, self.month, self.day, buy['t'], self._timezone),
+                            'p': buy['p'],
+                            'v': buy['v'],
+                            'cnt': buy['cnt'],
+                        })
+
+                    for sell in prev_snapshot['sell']:
+                        yielded_obj['sell'].append({
+                            't': _to_timestamp(self.year, self.month, self.day, sell['t'], self._timezone),
+                            'p': sell['p'],
+                            'v': sell['v'],
+                            'cnt': sell['cnt'],
+                        })
+
+                    yield yielded_obj
 
                 if pti == len(pick_times):
                     break
