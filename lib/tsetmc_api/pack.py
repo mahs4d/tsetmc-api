@@ -28,7 +28,7 @@ class DataPack:
         self.snapshots_30m = snapshots_30m
         self.snapshots_1h = snapshots_1h
 
-    def save_to(self, file_address):
+    def save_to(self, output_directory):
         tmp_dir = path.expanduser('~/.tsetmc-api/tmp')
 
         rmtree(tmp_dir, ignore_errors=True)
@@ -50,15 +50,18 @@ class DataPack:
             pickle.dump(self.snapshots_1h, fp)
 
         with open(path.join(tmp_dir, f'info.json'), 'w') as fp:
-            json.dump({
+            info = {
+                'version': 1,
                 'asset_id': self.asset.asset_id,
                 'short_name': self.asset.short_name,
                 'full_name': self.asset.full_name,
                 'from_date': f'{self.from_date.year}-{self.from_date.month}-{self.from_date.day}',
                 'to_date': f'{self.to_date.year}-{self.to_date.month}-{self.to_date.day}',
-            }, fp)
+            }
+            json.dump(info, fp)
 
-        _zipdir(tmp_dir, file_address)
+        output_filename = f"{info['asset_id']}_{info['from_date']}_{info['to_date']}_v{info['version']}.zip"
+        _zipdir(tmp_dir, path.join(output_directory, output_filename))
         rmtree(tmp_dir, ignore_errors=True)
 
     @staticmethod
