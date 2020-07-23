@@ -20,12 +20,12 @@ data_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './lib/
 
 setup(
     name='tsetmc-api',
-    version='1.0.0',
+    version='1.2.0',
     package_dir={'': 'lib'},
     packages=['tsetmc_api'],
     package_data={'tsetmc_api': get_directory_files(data_dir_path)},
     include_package_data=True,
-    install_requires=['requests>=2', 'beautifulsoup4>=4', 'lxml>=4'],
+    install_requires=['requests>=2', 'beautifulsoup4>=4', 'lxml>=4', 'python-dateutil>=2'],
     url='https://github.com/mahs4d/tsetmc-api',
     license='MIT',
     author='Mahdi Sadeghi',
