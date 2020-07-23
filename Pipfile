@@ -15,6 +15,6 @@ python-dateutil = "*"
 python_version = "3.7"
 
 [scripts]
-clean = "rm -r dist build \"./lib/boursika_backend_lib.egg-info\""
+clean = "rm -r dist build \"./lib/tsetmc_api.egg-info\""
 build = "python setup.py sdist bdist_wheel"
 publish = "twine upload dist/*"
