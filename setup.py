@@ -20,7 +20,7 @@ data_dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './lib/
 
 setup(
     name='tsetmc-api',
-    version='1.2.0',
+    version='1.2.1',
     package_dir={'': 'lib'},
     packages=['tsetmc_api'],
     package_data={'tsetmc_api': get_directory_files(data_dir_path)},
