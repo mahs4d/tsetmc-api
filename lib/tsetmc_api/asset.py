@@ -125,10 +125,11 @@ def _find_asset(q):
 # endregion
 
 class Asset:
-    def __init__(self, asset_id, short_name, full_name):
+    def __init__(self, asset_id, short_name=None, full_name=None, isin=None):
         self.asset_id = asset_id
         self.short_name = short_name
         self.full_name = full_name
+        self.isin = isin
 
     def get_daily_history(self, limit=999999):
         raw_daily_history = _load_raw_daily_history(self.asset_id, limit)
