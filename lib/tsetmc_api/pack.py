@@ -110,8 +110,8 @@ class DataPack:
             snapshots_30m = pickle.loads(zp.read('snapshots_30m.pickle'))
             snapshots_1h = pickle.loads(zp.read('snapshots_1h.pickle'))
 
-            from_date = datetime.strptime(info['from_date'], '%d-%m-%y').date()
-            to_date = datetime.strptime(info['to_date'], '%d-%m-%y').date()
+            from_date = datetime.strptime(info['from_date'], '%Y-%m-%d').date()
+            to_date = datetime.strptime(info['to_date'], '%Y-%m-%d').date()
 
             return DataPack(Asset(info['asset_id'], info['short_name'], info['full_name']), from_date,
                             to_date, snapshots_1m, snapshots_5m, snapshots_10m, snapshots_30m, snapshots_1h)
