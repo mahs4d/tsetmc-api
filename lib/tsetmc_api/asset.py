@@ -145,6 +145,9 @@ class Asset:
                         cache_address=path.expanduser('~/.tsetmc-api/intraday-cache')):
         return AssetDayDetails(self.asset_id, year, month, day, use_cache=use_cache, cache_address=cache_address)
 
+    def __str__(self):
+        return self.asset_id
+
     @staticmethod
     def find_asset(q):
         search_result = _find_asset(q)

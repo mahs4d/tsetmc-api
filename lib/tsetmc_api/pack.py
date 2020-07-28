@@ -2,6 +2,7 @@ import json
 import pickle
 import traceback
 import zipfile
+from datetime import datetime
 from os import path, makedirs, walk
 from shutil import rmtree
 
@@ -109,5 +110,8 @@ class DataPack:
             snapshots_30m = pickle.loads(zp.read('snapshots_30m.pickle'))
             snapshots_1h = pickle.loads(zp.read('snapshots_1h.pickle'))
 
-            return DataPack(Asset(info['asset_id'], info['short_name'], info['full_name']), info['from_date'],
-                            info['to_date'], snapshots_1m, snapshots_5m, snapshots_10m, snapshots_30m, snapshots_1h)
+            from_date = datetime.strptime(info['from_date'], '%d-%m-%y').date()
+            to_date = datetime.strptime(info['to_date'], '%d-%m-%y').date()
+
+            return DataPack(Asset(info['asset_id'], info['short_name'], info['full_name']), from_date,
+                            to_date, snapshots_1m, snapshots_5m, snapshots_10m, snapshots_30m, snapshots_1h)
