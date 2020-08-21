@@ -5,15 +5,16 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-_script_vars_pattern = re.compile("var (?P<name>.*)=(?P<content>\[[^;]*\]);")
+_intraday_pattern = re.compile("var (?P<name>.*)=(?P<content>\[[^;]*\]);")
 
 
-def _load_script_vars(asset_id, year, month, day):
+def _load_script_vars_from_web(asset_id, year, month, day):
     d = f'{year:04}{month:02}{day:02}'
     script_variables = {}
 
     # get data from url
-    daily_content = requests.get(f'http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i={asset_id}&d={d}', timeout=5).text
+    daily_content = requests.get(f'http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i={asset_id}&d={d}',
+                                 timeout=20).text
 
     # find and get script tags
     all_scripts = BeautifulSoup(daily_content, 'lxml').find_all('script')
@@ -22,17 +23,17 @@ def _load_script_vars(asset_id, year, month, day):
     third_script = str(all_scripts[-1])
 
     # extract first script variables
-    matches = _script_vars_pattern.findall(first_script)
+    matches = _intraday_pattern.findall(first_script)
     for match in matches:
         script_variables[match[0]] = json.loads(match[1].replace('\'', '"'))
 
     # extract second script variables
-    matches = _script_vars_pattern.findall(second_script)
+    matches = _intraday_pattern.findall(second_script)
     for match in matches:
         script_variables[match[0]] = json.loads(match[1].replace('\'', '"'))
 
     # extract third script variables
-    matches = _script_vars_pattern.findall(third_script)
+    matches = _intraday_pattern.findall(third_script)
     for match in matches:
         script_variables[match[0]] = json.loads(match[1].replace('\'', '"'))
 
@@ -76,16 +77,16 @@ def _extract_price_data(script_vars):
                 next_state_change_time = math.inf
 
         price_data.append({
-            'time': continuous_time,
-            'last': int(cpd[2]),
-            'yesterday': int(cpd[5]),
-            'open': int(cpd[4]),
-            'close': int(cpd[3]),
-            'high': int(cpd[6]),
-            'low': int(cpd[7]),
-            'count': int(cpd[8]),
-            'volume': int(cpd[9]),
-            'state': last_state,
+            't': continuous_time,
+            'lst': int(cpd[2]),
+            'y': int(cpd[5]),
+            'o': int(cpd[4]),
+            'c': int(cpd[3]),
+            'h': int(cpd[6]),
+            'l': int(cpd[7]),
+            'cnt': int(cpd[8]),
+            'v': int(cpd[9]),
+            's': last_state,
         })
 
     price_data.sort(key=lambda x: x['t'])
@@ -96,14 +97,14 @@ def _extract_orders_data(script_vars):
     orders = []
     for bld in script_vars['BestLimitData']:
         order = {
-            'time': bld[0],
-            'order': int(bld[1]),
-            'buy_count': int(bld[2]),
-            'buy_volume': int(bld[3]),
-            'buy_price': int(bld[4]),
-            'sell_count': int(bld[7]),
-            'sell_volume': int(bld[6]),
-            'sell_price': int(bld[5]),
+            't': bld[0],
+            'rank': int(bld[1]),
+            'bcnt': int(bld[2]),
+            'bv': int(bld[3]),
+            'bp': int(bld[4]),
+            'scnt': int(bld[7]),
+            'sv': int(bld[6]),
+            'sp': int(bld[5]),
         }
 
         orders.append(order)
@@ -116,9 +117,9 @@ def _extract_trade_data(script_vars):
     trades = [
         {
             'order': int(x[0]),
-            'time': int(f'{x[1][:2]}{x[1][3:5]}{x[1][6:]}'),
-            'volume': int(x[2]),
-            'price': int(x[3]),
+            't': int(f'{x[1][:2]}{x[1][3:5]}{x[1][6:]}'),
+            'v': int(x[2]),
+            'p': int(x[3]),
         }
         for x in script_vars['IntraTradeData']
     ]
@@ -126,45 +127,46 @@ def _extract_trade_data(script_vars):
     return trades
 
 
-def _extract_shareholders_data(script_vars):
-    shareholders = []
+def _extract_share_holders_data(script_vars):
+    share_holders = []
     for shd in script_vars['ShareHolderData']:
-        shareholders.append({
+        share_holders.append({
             'id': shd[0],
             'shares_count': shd[2],
-            'shares_percent': shd[3],
+            'percentage': shd[3],
             'name': shd[5],
         })
 
-    yesterday_shareholders = []
+    yesterday_share_holders = []
     for shd in script_vars['ShareHolderDataYesterday']:
-        yesterday_shareholders.append({
+        yesterday_share_holders.append({
             'id': shd[0],
             'shares_count': shd[2],
-            'shares_percent': shd[3],
+            'percentage': shd[3],
             'name': shd[5],
         })
 
-    return yesterday_shareholders, shareholders
+    return yesterday_share_holders, share_holders
 
 
-def load_intraday_history_data(asset_id, year, month, day):
-    """
-    اطلاعات نماد در یک روز خاص (نماد >‌ سابقه > دبل کلیک روی یک روز خاص)
-    """
+def load_intraday_data(asset_id, year, month, day):
+    script_vars = _load_script_vars_from_web(asset_id, year, month, day)
 
-    script_vars = _load_script_vars(asset_id, year, month, day)
+    asset_details = _extract_asset_details_data(script_vars)
+    price_data = _extract_price_data(script_vars)
 
-    ret = {}
+    if not price_data:
+        raise ValueError('there is no data for this asset in the specified date')
 
-    ret['asset_details'] = _extract_asset_details_data(script_vars)
-    ret['price_data'] = _extract_price_data(script_vars)
+    yesterday_shareholders, shareholders = _extract_share_holders_data(script_vars)
+    trades = _extract_trade_data(script_vars)
+    orders_data = _extract_orders_data(script_vars)
 
-    if not ret['price_data']:
-        return None
-
-    ret['orders'] = _extract_orders_data(script_vars)
-    ret['trades'] = _extract_trade_data(script_vars)
-    ret['shareholders_yesterday'], ret['shareholders_today'] = _extract_shareholders_data(script_vars)
-
-    return ret
+    return {
+        'asset_details': asset_details,
+        'price_data': price_data,
+        'yesterday_shareholders': yesterday_shareholders,
+        'shareholders': shareholders,
+        'trades': trades,
+        'orders_data': orders_data,
+    }

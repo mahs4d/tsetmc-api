@@ -1,174 +1,153 @@
-import json
-from os import path
+from jdatetime import date as jdate
 
-import pkg_resources
-import requests
-
+from .core import asset as asset_core
+from .core import shareholder as shareholder_core
+from .core.cache import MemoryCache
 from .day_details import AssetDayDetails
+from .shareholder import AssetMajorShareholder
 
-
-# region daily history
-
-def _load_raw_daily_history(asset_id, limit):
-    daily_content = requests.get(
-        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={asset_id}&Top={limit}&A=0',
-        timeout=5).text
-    print('loaded')
-    raw_ticks = daily_content.split(';')
-
-    return raw_ticks
-
-
-def _extract_daily_history(raw_ticks):
-    ticks = []
-    for raw_tick in raw_ticks:
-        if raw_tick == '':
-            continue
-
-        tick_data = raw_tick.split('@')
-
-        time = tick_data[0]
-        high_price = tick_data[1]
-        low_price = tick_data[2]
-        close_price = tick_data[3]
-        last_price = tick_data[4]
-        first_price = tick_data[5]
-        yesterday_price = tick_data[6]
-        value = tick_data[7]
-        volume = tick_data[8]
-
-        ticks.append({
-            'time': time,  # todo: parse
-            'first_price': int(first_price[:-3]),
-            'high_price': int(high_price[:-3]),
-            'low_price': int(low_price[:-3]),
-            'close_price': int(close_price[:-3]),
-            'last_price': int(last_price[:-3]),
-            'yesterday_price': int(yesterday_price[:-3]),
-            'value': int(float(value)),
-            'volume': int(float(volume)),
-        })
-
-    return ticks
-
-
-# endregion
-
-# region client type
-
-def _load_raw_client_type_data(asset_id):
-    client_types_raw = requests.get(f'http://www.tsetmc.com/tsev2/data/clienttype.aspx?i={asset_id}', timeout=5).text
-    client_types_raw = client_types_raw.split(';')
-
-    return client_types_raw
-
-
-def _extract_client_type_history(raw_client_type_data):
-    ret = []
-    for client_type_day in raw_client_type_data:
-        if client_type_day == '':
-            continue
-
-        tick_data = client_type_day.split(',')
-
-        time = tick_data[0]
-        individual_buy_count = tick_data[1]
-        corporate_buy_count = tick_data[2]
-        individual_sell_count = tick_data[3]
-        corporate_sell_count = tick_data[4]
-        individual_buy_vol = tick_data[5]
-        corporate_buy_vol = tick_data[6]
-        individual_sell_vol = tick_data[7]
-        corporate_sell_vol = tick_data[8]
-        individual_buy_value = tick_data[9]
-        corporate_buy_value = tick_data[10]
-        individual_sell_value = tick_data[11]
-        corporate_sell_value = tick_data[12]
-
-        ret.append({
-            'time': time,  # todo: parse
-            'individual_buy_count': int(individual_buy_count),
-            'corporate_buy_count': int(corporate_buy_count),
-            'individual_sell_count': int(individual_sell_count),
-            'corporate_sell_count': int(corporate_sell_count),
-            'individual_buy_vol': int(individual_buy_vol),
-            'corporate_buy_vol': int(corporate_buy_vol),
-            'individual_sell_vol': int(individual_sell_vol),
-            'corporate_sell_vol': int(corporate_sell_vol),
-            'individual_buy_value': int(individual_buy_value),
-            'corporate_buy_value': int(corporate_buy_value),
-            'individual_sell_value': int(individual_sell_value),
-            'corporate_sell_value': int(corporate_sell_value),
-        })
-
-    return ret
-
-
-# endregion
-
-# region search assets
-
-def _find_asset(q):
-    search_raw = requests.get(f'http://www.tsetmc.com/tsev2/data/search.aspx?skey={q}', timeout=5).text.split(';')
-
-    if not search_raw or search_raw[0] == '':
-        return None
-
-    first_result = search_raw[0].split(',')
-    return {
-        'id': first_result[2],
-        'full_name': first_result[1],
-        'short_name': first_result[0],
-    }
-
-
-# endregion
 
 class Asset:
-    def __init__(self, asset_id, short_name=None, full_name=None, isin=None):
-        self.asset_id = asset_id
-        self.short_name = short_name
-        self.full_name = full_name
-        self.isin = isin
+    def __init__(self, asset_id):
+        self.id = asset_id
 
-    def get_daily_history(self, limit=999999):
-        raw_daily_history = _load_raw_daily_history(self.asset_id, limit)
-        daily_history = _extract_daily_history(raw_daily_history)
-        return daily_history
+    def get_price_data(self):
+        """
+        اطلاعات قیمت لحظه‌ای
+        """
+        # todo
+        raise NotImplementedError('sorry, price date of asset has not been implemented yet :(')
 
-    def get_client_type_history(self):
-        raw_client_type_data = _load_raw_client_type_data(self.asset_id)
-        client_type_history = _extract_client_type_history(raw_client_type_data)
-        return client_type_history
+    def get_details(self):
+        """
+        شناسه
+        """
+        if MemoryCache.exists('asset_details', self.id):
+            return MemoryCache.fetch('asset_details', self.id)
 
-    def get_day_details(self, year, month, day, use_cache=True,
-                        cache_address=path.expanduser('~/.tsetmc-api/intraday-cache')):
-        return AssetDayDetails(self.asset_id, year, month, day, use_cache=use_cache, cache_address=cache_address)
+        raw_details = asset_core.get_asset_details(self.id)
+        ret = {
+            'symbol_isin': raw_details.get('کد 12 رقمی نماد', None),
+            'symbol_short_isin': raw_details.get('کد 5 رقمی نماد', None),
+            'symbol_short_name': raw_details.get('نماد فارسی', None),
+            'symbol_long_name': raw_details.get('نماد 30 رقمی فارسی', None),
+            'symbol_english_name': raw_details.get('نام لاتین شرکت', None),
+
+            'company_isin': raw_details.get('کد 12 رقمی شرکت', None),
+            'company_short_isin': raw_details.get('کد 4 رقمی شرکت', None),
+            'company_name': raw_details.get('نام شرکت', None),
+
+            'market_code': raw_details.get('کد تابلو', None),
+            'market_name': raw_details.get('بازار', None),
+
+            'group_code': raw_details.get('کد گروه صنعت', None),
+            'group_name': raw_details.get('گروه صنعت', None),
+
+            'subgroup_code': raw_details.get('کد زیر گروه صنعت', None),
+            'subgroup_name': raw_details.get('زیر گروه صنعت', None),
+        }
+
+        for key in ret:
+            if isinstance(ret[key], str):
+                ret[key] = ret[key].strip()
+
+        MemoryCache.store('asset_details', self.id, ret)
+
+        return ret
+
+    def get_daily_history(self):
+        """
+        سابقه
+        """
+        if MemoryCache.exists('asset_daily_history', self.id):
+            return MemoryCache.fetch('asset_daily_history', self.id)
+
+        raw_history = asset_core.get_daily_history(self.id)
+        ret = []
+
+        for raw_day in raw_history:
+            ret.append({
+                'date': jdate.fromgregorian(date=raw_day['date']),
+                'count': raw_day['count'],
+                'volume': raw_day['volume'],
+                'value': raw_day['value'],
+                'yesterday': raw_day['yesterday_price'],
+                'last': raw_day['last_price'],
+                'first': raw_day['first_price'],
+                'close': raw_day['close_price'],
+                'low': raw_day['low_price'],
+                'high': raw_day['high_price'],
+            })
+
+        MemoryCache.store('asset_daily_history', self.id, ret)
+
+        return ret
+
+    def get_day_details(self, jyear, jmonth, jday):
+        """
+        اطلاعات یک روز خاص در سابقه
+        """
+        return AssetDayDetails(self, jyear, jmonth, jday)
+
+    def get_shareholder_proportions_history(self):
+        """
+        تاریخچه‌ی حقیقی حقوقی
+        """
+        if MemoryCache.exists('asset_shareholder_proportions_history', self.id):
+            return MemoryCache.fetch('asset_shareholder_proportions_history', self.id)
+
+        raw_history = shareholder_core.get_shareholder_proportions_history(self.id)
+        ret = []
+        for raw_proportion in raw_history:
+            t = raw_proportion[0]
+            ret.append({
+                'date': jdate.fromgregorian(year=int(t[:4]), month=int(t[4:6]), day=int(t[6:])),
+                'natural': {
+                    'buy_count': int(raw_proportion[1]),
+                    'buy_volume': int(raw_proportion[5]),
+                    'buy_value': int(raw_proportion[9]),
+                    'sell_count': int(raw_proportion[3]),
+                    'sell_volume': int(raw_proportion[7]),
+                    'sell_value': int(raw_proportion[11]),
+                },
+                'legal': {
+                    'buy_count': int(raw_proportion[2]),
+                    'buy_volume': int(raw_proportion[6]),
+                    'buy_value': int(raw_proportion[10]),
+                    'sell_count': int(raw_proportion[4]),
+                    'sell_volume': int(raw_proportion[8]),
+                    'sell_value': int(raw_proportion[12]),
+                },
+            })
+
+        MemoryCache.store('asset_shareholder_proportions_history', self.id, ret)
+
+        return ret
+
+    def get_major_shareholders(self):
+        """
+        لیست سهامداران عمده
+        """
+        if MemoryCache.exists('asset_major_shareholders', self.id):
+            return MemoryCache.fetch('asset_major_shareholders', self.id)
+
+        company_isin = self.get_details()['company_isin']
+        raw_majors = shareholder_core.get_major_shareholders(company_isin)
+        ret = []
+        for raw_major in raw_majors:
+            ret.append(
+                AssetMajorShareholder(self.id,
+                                      company_isin=company_isin,
+                                      holder_name=raw_major['name'],
+                                      holder_id=raw_major['id'],
+                                      percentage=raw_major['percentage'],
+                                      shares_count=raw_major['shares_count'],
+                                      change=raw_major['change'])
+            )
+
+        MemoryCache.store('asset_major_shareholders', self.id, ret)
+
+        return ret
 
     def __str__(self):
-        return self.asset_id
-
-    @staticmethod
-    def find_asset(q):
-        search_result = _find_asset(q)
-
-        if search_result is None:
-            raise Exception('not found')
-
-        return Asset(asset_id=search_result['id'],
-                     short_name=search_result['short_name'],
-                     full_name=search_result['full_name'])
-
-    @staticmethod
-    def get_assets():
-        """
-        this list is by no means complete
-        """
-        json_path = pkg_resources.resource_filename('tsetmc_api', 'data/assets.json')
-        with open(json_path, 'r') as fp:
-            parsed = json.load(fp)
-            assets = [Asset(asset_id=asset_identifier['id'],
-                            short_name=asset_identifier['short_name'],
-                            full_name=asset_identifier['full_name']) for asset_identifier in parsed]
-
-        return assets
+        return f'Asset > {self.id}'

@@ -1,15 +1,24 @@
 from datetime import date
 
 import requests
+from bs4 import BeautifulSoup
 
 
-def load_daily_history_data(asset_id, limit=999999):
-    """
-    سابقه‌ی نماد (نماد >‌ سابقه)
-    """
+def get_asset_details(asset_id):
+    raw = requests.get(f'http://www.tsetmc.com/Loader.aspx?Partree=15131M&i={asset_id}', timeout=20).text
 
+    ret = {}
+    trs = BeautifulSoup(raw, 'lxml').find_all('tr')
+    for tr in trs:
+        tds = tr.find_all('td')
+        ret[tds[0].contents[0]] = str(tds[1].contents[0])
+
+    return ret
+
+
+def get_daily_history(asset_id):
     daily_content = requests.get(
-        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={asset_id}&Top={limit}&A=0',
+        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={asset_id}&Top=99999&A=0',
         timeout=20).text
     raw_ticks = daily_content.split(';')
 
@@ -29,6 +38,7 @@ def load_daily_history_data(asset_id, limit=999999):
         yesterday_price = tick_data[6]
         value = tick_data[7]
         volume = tick_data[8]
+        count = tick_data[9]
 
         ticks.append({
             'date': date(year=int(date_raw[:4]), month=int(date_raw[4:6]), day=int(date_raw[6:])),
@@ -40,6 +50,7 @@ def load_daily_history_data(asset_id, limit=999999):
             'yesterday_price': int(yesterday_price[:-3]),
             'value': int(float(value)),
             'volume': int(float(volume)),
+            'count': int(float(count)),
         })
 
     return ticks

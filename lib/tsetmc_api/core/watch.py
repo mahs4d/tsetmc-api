@@ -1,8 +1,4 @@
-import time
-
 import requests
-
-from .asset import Asset
 
 
 def _decompile_price_section(raw_section):
@@ -41,7 +37,10 @@ def _decompile_price_section(raw_section):
         yval = int(cols[22])
 
         ret[asset_id] = {
-            'asset': Asset(asset_id, short_name, full_name, isin),
+            'asset_id': asset_id,
+            'short_name': short_name,
+            'full_name': full_name,
+            'isin': isin,
             'open': open_price,
             'close': close_price,
             'last': last_price,
@@ -115,35 +114,3 @@ def _fetch_raw_ticks_data():
     refid = sections[4]
 
     return watch, refid
-
-
-class Ticks:
-    def __init__(self, raw_ticks_data):
-        self.raw_ticks_data = raw_ticks_data
-
-    def get_by_asset(self, asset_id):
-        return self.raw_ticks_data[asset_id]
-
-    def get_all(self):
-        return self.raw_ticks_data.values()
-
-
-class Ticker:
-    def __init__(self, watch_refresh_rate=1):
-        self._watch_refresh_rate = watch_refresh_rate
-
-        self._bindings = []
-
-    def bind(self, listener):
-        self._bindings.append({
-            'listener': listener
-        })
-
-    def start(self):
-        while True:
-            time.sleep(self._watch_refresh_rate)
-            raw_ticks_data, _ = _fetch_raw_ticks_data()
-            ticks = Ticks(raw_ticks_data)
-
-            for binding in self._bindings:
-                binding['listener'](ticks)
