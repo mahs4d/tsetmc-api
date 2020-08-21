@@ -6,8 +6,8 @@ from datetime import datetime
 from os import path, makedirs, walk
 from shutil import rmtree
 
-from .asset import Asset
-from .utils import daterange
+from tsetmc_api.old.asset import Asset
+from tsetmc_api.old.utils import daterange
 
 
 def _zipdir(tmp_dir, destination_zipfile):
