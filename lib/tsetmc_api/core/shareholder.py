@@ -5,13 +5,13 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def get_shareholder_proportions_history(asset_id):
+def get_client_type_history(asset_id):
     raw = requests.get(f'http://www.tsetmc.com/tsev2/data/clienttype.aspx?i={asset_id}',
                        timeout=20).text
-    raw_shareholder_proportions = raw.split(';')
+    raw_client_type_history = raw.split(';')
 
     ret = []
-    for rsp in raw_shareholder_proportions:
+    for rsp in raw_client_type_history:
         ret.append(rsp.split(','))
 
     return ret

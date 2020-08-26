@@ -11,6 +11,7 @@ beautifulsoup4 = "*"
 lxml = "*"
 python-dateutil = "*"
 jdatetime = "*"
+schedule = "*"
 
 [requires]
 python_version = "3.7"

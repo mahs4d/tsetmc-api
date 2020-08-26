@@ -89,14 +89,14 @@ class Asset:
         """
         return AssetDayDetails(self, jyear, jmonth, jday)
 
-    def get_shareholder_proportions_history(self):
+    def get_client_type_history(self):
         """
         تاریخچه‌ی حقیقی حقوقی
         """
-        if MemoryCache.exists('asset_shareholder_proportions_history', self.id):
-            return MemoryCache.fetch('asset_shareholder_proportions_history', self.id)
+        if MemoryCache.exists('asset_client_type_history', self.id):
+            return MemoryCache.fetch('asset_client_type_history', self.id)
 
-        raw_history = shareholder_core.get_shareholder_proportions_history(self.id)
+        raw_history = shareholder_core.get_client_type_history(self.id)
         ret = []
         for raw_proportion in raw_history:
             t = raw_proportion[0]
@@ -120,7 +120,7 @@ class Asset:
                 },
             })
 
-        MemoryCache.store('asset_shareholder_proportions_history', self.id, ret)
+        MemoryCache.store('asset_client_type_history', self.id, ret)
 
         return ret
 
