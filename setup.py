@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="tsetmc-api",
-    version="3.0.2",
+    version="3.0.3",
     install_requires=[
         "beautifulsoup4==4.9.3",
         "certifi==2020.11.8",

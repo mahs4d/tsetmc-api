@@ -106,7 +106,7 @@ def _extract_orders(raw_section, watch):
 
 
 def fetch_watch_price_data():
-    r = requests.get('http://www.tsetmc.com/tsev2/data/MarketWatchInit.aspx?h=0&r=0')
+    r = requests.get('http://www.tsetmc.com/tsev2/data/MarketWatchInit.aspx?h=0&r=0', timeout=20, verify=False)
     r.raise_for_status()
 
     raw_data = r.text
@@ -120,7 +120,7 @@ def fetch_watch_price_data():
 
 
 def fetch_watch_client_type_data():
-    r = requests.get('http://www.tsetmc.com/tsev2/data/ClientTypeAll.aspx')
+    r = requests.get('http://www.tsetmc.com/tsev2/data/ClientTypeAll.aspx', timeout=20, verify=False)
     r.raise_for_status()
     raw_data = r.text
 
@@ -265,7 +265,7 @@ _STATS_CLIENT_TYPE_INDICES = {
 
 
 def fetch_watch_stats_data():
-    r = requests.get('http://www.tsetmc.com/tsev2/data/InstValue.aspx?t=a')
+    r = requests.get('http://www.tsetmc.com/tsev2/data/InstValue.aspx?t=a', timeout=20, verify=False)
     r.raise_for_status()
     raw_data = r.text
 
@@ -333,7 +333,7 @@ def fetch_watch_stats_data():
 
 
 def fetch_watch_historical_data():
-    r = requests.get('http://members.tsetmc.com/tsev2/data/ClosingPriceAll.aspx')
+    r = requests.get('http://members.tsetmc.com/tsev2/data/ClosingPriceAll.aspx', timeout=20, verify=False)
     r.raise_for_status()
     raw_data = r.text
 

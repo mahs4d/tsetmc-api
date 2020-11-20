@@ -101,9 +101,9 @@ class Watch:
 
         return self
 
-    def start_watch(self):
+    def prepare_watch(self):
         """
-        شروع دیده‌بان
+        کنترل دستی
         """
         while self._last_historical_data is None:
             self._update_historical_data()
@@ -120,9 +120,20 @@ class Watch:
         schedule.every(self._price_data_rtime).seconds.do(self._update_price_data)
         schedule.every(self._client_type_data_rtime).seconds.do(self._update_client_type_data)
 
+    def step_watch(self):
+        """
+        کنترل دستی
+        """
+        schedule.run_pending()
+        time.sleep(1)
+
+    def start_watch(self):
+        """
+        شروع دیده‌بان
+        """
+        self.prepare_watch()
         while True:
-            schedule.run_pending()
-            time.sleep(1)
+            self.step_watch()
 
     def _publish(self):
         if self._last_historical_data is None:
@@ -161,7 +172,7 @@ class Watch:
         try:
             self._last_client_type_data = watch_core.fetch_watch_client_type_data()
         except Exception as ex:
-            print('! error in updating client type data')
+            print_exc()
             return
 
         self._publish()
@@ -170,13 +181,13 @@ class Watch:
         try:
             self._last_historical_data = watch_core.fetch_watch_historical_data()
         except:
-            print('! error in updating historical data')
+            print_exc()
 
     def _update_stats_data(self):
         try:
             self._last_stats_data = watch_core.fetch_watch_stats_data()
         except:
-            print('! error in updating stats data')
+            print_exc()
 
 
 class SahamFilter(Filter):
