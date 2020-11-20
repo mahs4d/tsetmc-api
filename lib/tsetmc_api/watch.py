@@ -153,11 +153,13 @@ class Watch:
             self.step_watch()
 
     def _publish(self):
-        if self._last_historical_data is None:
-            return
+        if self._historical_data:
+            if self._last_historical_data is None:
+                return
 
-        if self._last_stats_data is None:
-            return
+        if self._stats_data:
+            if self._last_stats_data is None:
+                return
 
         if self._last_price_data is None:
             return
