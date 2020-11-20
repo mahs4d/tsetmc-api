@@ -50,6 +50,9 @@ class WatchTick:
         """
         آمارهای کلیدی دیده‌بان
         """
+        if self.stats_data is None:
+            return None
+
         return self.stats_data.get(symbol_id, {})
 
 
