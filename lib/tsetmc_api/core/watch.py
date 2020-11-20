@@ -1,3 +1,5 @@
+from traceback import print_exc
+
 import requests
 
 
@@ -6,62 +8,65 @@ def _extract_prices(raw_section):
 
     rows = raw_section.split(';')
     for row in rows:
-        if row == '':
-            continue
+        try:
+            if row == '':
+                continue
 
-        cols = row.split(',')
-        if len(cols) in [0, 10]:
-            continue
+            cols = row.split(',')
+            if len(cols) in [0, 10]:
+                continue
 
-        symbol_id = cols[0]
-        isin = cols[1]
-        short_name = cols[2]
-        full_name = cols[3]
-        open_price = int(cols[5])
-        close_price = int(cols[6])
-        last_price = int(cols[7])
-        count = int(cols[8])
-        volume = int(cols[9])
-        value = int(cols[10])
-        low_price = int(cols[11])
-        high_price = int(cols[12])
-        yesterday = int(cols[13])
-        eps = int(cols[14]) if cols[14] != '' else None
-        base_volume = int(cols[15])
-        visit_count = int(cols[16])
-        flow = int(cols[17])
-        group = int(cols[18])
-        max_price = int(float(cols[19]))
-        min_price = int(float(cols[20]))
-        z = int(cols[21])
-        yval = int(cols[22])
+            symbol_id = cols[0]
+            isin = cols[1]
+            short_name = cols[2]
+            full_name = cols[3]
+            open_price = int(cols[5])
+            close_price = int(cols[6])
+            last_price = int(cols[7])
+            count = int(cols[8])
+            volume = int(cols[9])
+            value = int(cols[10])
+            low_price = int(cols[11])
+            high_price = int(cols[12])
+            yesterday = int(cols[13])
+            eps = int(cols[14]) if cols[14] != '' else None
+            base_volume = int(cols[15])
+            visit_count = int(cols[16])
+            flow = int(cols[17])
+            group = int(cols[18])
+            max_price = int(float(cols[19]))
+            min_price = int(float(cols[20]))
+            z = int(cols[21])
+            yval = int(cols[22])
 
-        ret[symbol_id] = {
-            'symbol_id': symbol_id,
-            'symbol_short_name': short_name,
-            'symbol_long_name': full_name,
-            'isin': isin,
-            'open': open_price,
-            'close': close_price,
-            'last': last_price,
-            'high': high_price,
-            'low': low_price,
-            'count': count,
-            'volume': volume,
-            'value': value,
-            'yesterday': yesterday,
-            'eps': eps,
-            'base_volume': base_volume,
-            'visits_count': visit_count,
-            'flow': flow,
-            'group_code': group,
-            'max': max_price,
-            'min': min_price,
-            'z': z,
-            'yval': yval,
-            'buy_orders': [],
-            'sell_orders': [],
-        }
+            ret[symbol_id] = {
+                'symbol_id': symbol_id,
+                'symbol_short_name': short_name,
+                'symbol_long_name': full_name,
+                'isin': isin,
+                'open': open_price,
+                'close': close_price,
+                'last': last_price,
+                'high': high_price,
+                'low': low_price,
+                'count': count,
+                'volume': volume,
+                'value': value,
+                'yesterday': yesterday,
+                'eps': eps,
+                'base_volume': base_volume,
+                'visits_count': visit_count,
+                'flow': flow,
+                'group_code': group,
+                'max': max_price,
+                'min': min_price,
+                'z': z,
+                'yval': yval,
+                'buy_orders': [],
+                'sell_orders': [],
+            }
+        except:
+            print_exc()
 
     return ret
 
@@ -70,37 +75,40 @@ def _extract_orders(raw_section, watch):
     ret = {}
     rows = raw_section.split(';')
     for row in rows:
-        if row == '':
-            continue
+        try:
+            if row == '':
+                continue
 
-        cols = row.split(',')
+            cols = row.split(',')
 
-        symbol_id = cols[0]
-        rank = cols[1]
-        sell_count = cols[2]
-        buy_count = cols[3]
-        buy_price = cols[4]
-        sell_price = cols[5]
-        buy_volume = cols[6]
-        sell_volume = cols[7]
+            symbol_id = cols[0]
+            rank = cols[1]
+            sell_count = cols[2]
+            buy_count = cols[3]
+            buy_price = cols[4]
+            sell_price = cols[5]
+            buy_volume = cols[6]
+            sell_volume = cols[7]
 
-        ainfo = watch.get(symbol_id, None)
-        if ainfo is None:
-            continue
-        ainfo['buy_orders'].append({
-            'rank': int(rank),
-            'count': int(buy_count),
-            'price': int(buy_price),
-            'volume': int(buy_volume),
-        })
-        ainfo['sell_orders'].append({
-            'rank': int(rank),
-            'count': int(sell_count),
-            'price': int(sell_price),
-            'volume': int(sell_volume),
-        })
+            ainfo = watch.get(symbol_id, None)
+            if ainfo is None:
+                continue
+            ainfo['buy_orders'].append({
+                'rank': int(rank),
+                'count': int(buy_count),
+                'price': int(buy_price),
+                'volume': int(buy_volume),
+            })
+            ainfo['sell_orders'].append({
+                'rank': int(rank),
+                'count': int(sell_count),
+                'price': int(sell_price),
+                'volume': int(sell_volume),
+            })
 
-        ret[symbol_id] = ainfo
+            ret[symbol_id] = ainfo
+        except:
+            print_exc()
 
     return ret
 

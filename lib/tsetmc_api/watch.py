@@ -1,6 +1,7 @@
 import time
 from abc import ABC, abstractmethod
 from traceback import print_exc
+from typing import List, Optional
 
 import schedule
 
@@ -8,37 +9,44 @@ from .core import watch as watch_core
 
 
 class WatchTick:
-    def __init__(self, price_data, client_type_data, historical_data, stats_data):
+    def __init__(self,
+                 price_data: dict,
+                 client_type_data: dict,
+                 historical_data: Optional[List[dict]],
+                 stats_data: Optional[dict]):
         self.price_data = price_data
         self.client_type_data = client_type_data
         self.historical_data = historical_data
         self.stats_data = stats_data
 
-    def get_symbol_ids(self):
+    def get_symbol_ids(self) -> List[str]:
         """
         لیست آی دی همه‌ی نمادهای داخل دیده‌بان
         """
-        return self.price_data.keys()
+        return list(self.price_data.keys())
 
-    def get_price_data(self, symbol_id):
+    def get_price_data(self, symbol_id) -> dict:
         """
         اطلاعات قیمتی و سفارشات دیده‌بان
         """
         return self.price_data.get(symbol_id, {})
 
-    def get_client_type_data(self, symbol_id):
+    def get_client_type_data(self, symbol_id) -> dict:
         """
         اطلاعات حقیقی حقوقی دیده‌بان
         """
         return self.client_type_data.get(symbol_id, {})
 
-    def get_historical_data(self, symbol_id):
+    def get_historical_data(self, symbol_id) -> Optional[dict]:
         """
         اطلاعات سابقه‌ی دیده‌بان
         """
+        if self.historical_data is None:
+            return None
+
         return self.historical_data.get(symbol_id, {})
 
-    def get_stats_data(self, symbol_id):
+    def get_stats_data(self, symbol_id) -> Optional[dict]:
         """
         آمارهای کلیدی دیده‌بان
         """
@@ -82,9 +90,13 @@ class Watch:
     def __init__(self,
                  simple_refresh_time: int = 1,
                  client_type_refresh_time: int = 60,
+                 historical_data: bool = True,
+                 stats_data: bool = True,
                  ):
         self._price_data_rtime = simple_refresh_time
         self._client_type_data_rtime = client_type_refresh_time
+        self._historical_data = historical_data
+        self._stats_data = stats_data
 
         self._last_price_data = None
         self._last_client_type_data = None
@@ -105,11 +117,13 @@ class Watch:
         """
         کنترل دستی
         """
-        while self._last_historical_data is None:
-            self._update_historical_data()
+        if self._historical_data:
+            while self._last_historical_data is None:
+                self._update_historical_data()
 
-        while self._last_stats_data is None:
-            self._update_stats_data()
+        if self._stats_data:
+            while self._last_stats_data is None:
+                self._update_stats_data()
 
         while self._last_price_data is None:
             self._update_price_data()
@@ -124,8 +138,11 @@ class Watch:
         """
         کنترل دستی
         """
-        schedule.run_pending()
-        time.sleep(1)
+        try:
+            schedule.run_pending()
+            time.sleep(1)
+        except:
+            print_exc()
 
     def start_watch(self):
         """
