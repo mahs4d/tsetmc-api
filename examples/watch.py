@@ -9,8 +9,8 @@ from tsetmc_api.watch import WatchTick
 
 
 class PooleHooshmandFilter(Filter):
-    def apply(self, asset_id, watch_tick: WatchTick):
-        client_type_data = watch_tick.get_client_type_data(asset_id)  # گرفتن اطلاعات حقیقی حقوقی سهم
+    def apply(self, symbol_id, watch_tick: WatchTick):
+        client_type_data = watch_tick.get_client_type_data(symbol_id)  # گرفتن اطلاعات حقیقی حقوقی سهم
 
         # بعضی از سهما اطلاعات حقیقی حقوقی ندارند (نمیدونم چرا) اونارو میندازیم بیرون
         if client_type_data == {}:
@@ -20,7 +20,7 @@ class PooleHooshmandFilter(Filter):
 
         buy_volume = natural_ct_data.get('buy_volume')  # حجم خرید حقیقی
         buy_count = natural_ct_data.get('buy_count')  # تعداد خریدار حقیقی
-        close = watch_tick.get_simple_data(asset_id).get('close')  # قیمت نهایی سهم
+        close = watch_tick.get_simple_data(symbol_id).get('close')  # قیمت نهایی سهم
 
         # برای جلوگیری از تقسیم بر صفر
         if buy_count == 0:
@@ -37,9 +37,9 @@ class PooleHooshmandFilter(Filter):
 def on_poolehooshmand_tick(tick: WatchTick):
     print('-----------------------------------------------------------------')
 
-    asset_ids = tick.get_symbol_ids()
-    for asset_id in asset_ids:
-        print(tick.get_simple_data(asset_id)['symbol_short_name'])
+    symbol_ids = tick.get_symbol_ids()
+    for symbol_id in symbol_ids:
+        print(tick.get_price_data(symbol_id)['symbol_short_name'])
 
     print('-----------------------------------------------------------------')
 
