@@ -5,9 +5,9 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def get_client_type_history(asset_id):
-    raw = requests.get(f'http://www.tsetmc.com/tsev2/data/clienttype.aspx?i={asset_id}',
-                       timeout=20).text
+def get_client_type_history(symbol_id):
+    raw = requests.get(f'http://www.tsetmc.com/tsev2/data/clienttype.aspx?i={symbol_id}',
+                       timeout=20, verify=False).text
     raw_client_type_history = raw.split(';')
 
     ret = []
@@ -18,7 +18,8 @@ def get_client_type_history(asset_id):
 
 
 def get_major_shareholders(company_isin):
-    raw = requests.get(f'http://www.tsetmc.com/Loader.aspx?Partree=15131T&c={company_isin}', timeout=20).text
+    raw = requests.get(f'http://www.tsetmc.com/Loader.aspx?Partree=15131T&c={company_isin}', timeout=20,
+                       verify=False).text
     trs = BeautifulSoup(raw, 'lxml').find('tbody').find_all('tr')
     locale.setlocale(locale.LC_ALL, 'en_US.UTF8')
 
@@ -44,7 +45,7 @@ def get_major_shareholders(company_isin):
 
 def get_major_shareholder_details(company_isin, holder_id):
     raw = requests.get(f'http://www.tsetmc.com/tsev2/data/ShareHolder.aspx?i={holder_id}%2C{company_isin}',
-                       timeout=20).text
+                       timeout=20, verify=False).text
     raw = raw.split(';')
 
     ticks = []

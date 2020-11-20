@@ -1,2 +1,2 @@
-from .asset import Asset
+from .symbol import Symbol
 from .watch import Watch, Filter

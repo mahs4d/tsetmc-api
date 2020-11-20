@@ -1,37 +1,39 @@
+from typing import List
+
 from jdatetime import date as jdate
 
-from .core import asset as asset_core
 from .core import shareholder as shareholder_core
+from .core import symbol as symbol_core
 from .core.cache import MemoryCache
-from .day_details import AssetDayDetails
-from .shareholder import AssetMajorShareholder
+from .day_details import SymbolDayDetails
+from .shareholder import SymbolMajorShareholder
 
 
-class Asset:
-    def __init__(self, asset_id):
-        self.id = asset_id
+class Symbol:
+    def __init__(self, symbol_id):
+        self.id = symbol_id
 
     def get_price_data(self):
         """
         اطلاعات قیمت لحظه‌ای
         """
         # todo
-        raise NotImplementedError('sorry, price date of asset has not been implemented yet :(')
+        raise NotImplementedError('sorry, price date of symbol has not been implemented yet :(')
 
-    def get_details(self):
+    def get_details(self) -> dict:
         """
         شناسه
         """
-        if MemoryCache.exists('asset_details', self.id):
-            return MemoryCache.fetch('asset_details', self.id)
+        if MemoryCache.exists('symbol_details', self.id):
+            return MemoryCache.fetch('symbol_details', self.id)
 
-        raw_details = asset_core.get_asset_details(self.id)
+        raw_details = symbol_core.get_symbol_details(self.id)
         ret = {
-            'symbol_isin': raw_details.get('کد 12 رقمی نماد', None),
-            'symbol_short_isin': raw_details.get('کد 5 رقمی نماد', None),
-            'symbol_short_name': raw_details.get('نماد فارسی', None),
-            'symbol_long_name': raw_details.get('نماد 30 رقمی فارسی', None),
-            'symbol_english_name': raw_details.get('نام لاتین شرکت', None),
+            'isin': raw_details.get('کد 12 رقمی نماد', None),
+            'short_isin': raw_details.get('کد 5 رقمی نماد', None),
+            'short_name': raw_details.get('نماد فارسی', None),
+            'long_name': raw_details.get('نماد 30 رقمی فارسی', None),
+            'english_name': raw_details.get('نام لاتین شرکت', None),
 
             'company_isin': raw_details.get('کد 12 رقمی شرکت', None),
             'company_short_isin': raw_details.get('کد 4 رقمی شرکت', None),
@@ -51,18 +53,18 @@ class Asset:
             if isinstance(ret[key], str):
                 ret[key] = ret[key].strip()
 
-        MemoryCache.store('asset_details', self.id, ret)
+        MemoryCache.store('symbol_details', self.id, ret)
 
         return ret
 
-    def get_daily_history(self):
+    def get_daily_history(self) -> List[dict]:
         """
         سابقه
         """
-        if MemoryCache.exists('asset_daily_history', self.id):
-            return MemoryCache.fetch('asset_daily_history', self.id)
+        if MemoryCache.exists('symbol_daily_history', self.id):
+            return MemoryCache.fetch('symbol_daily_history', self.id)
 
-        raw_history = asset_core.get_daily_history(self.id)
+        raw_history = symbol_core.get_daily_history(self.id)
         ret = []
 
         for raw_day in raw_history:
@@ -79,22 +81,22 @@ class Asset:
                 'high': raw_day['high_price'],
             })
 
-        MemoryCache.store('asset_daily_history', self.id, ret)
+        MemoryCache.store('symbol_daily_history', self.id, ret)
 
         return ret
 
-    def get_day_details(self, jyear, jmonth, jday):
+    def get_day_details(self, jyear: int, jmonth: int, jday: int) -> SymbolDayDetails:
         """
         اطلاعات یک روز خاص در سابقه
         """
-        return AssetDayDetails(self, jyear, jmonth, jday)
+        return SymbolDayDetails(self, jyear, jmonth, jday)
 
-    def get_client_type_history(self):
+    def get_client_type_history(self) -> List[dict]:
         """
         تاریخچه‌ی حقیقی حقوقی
         """
-        if MemoryCache.exists('asset_client_type_history', self.id):
-            return MemoryCache.fetch('asset_client_type_history', self.id)
+        if MemoryCache.exists('symbol_client_type_history', self.id):
+            return MemoryCache.fetch('symbol_client_type_history', self.id)
 
         raw_history = shareholder_core.get_client_type_history(self.id)
         ret = []
@@ -120,34 +122,34 @@ class Asset:
                 },
             })
 
-        MemoryCache.store('asset_client_type_history', self.id, ret)
+        MemoryCache.store('symbol_client_type_history', self.id, ret)
 
         return ret
 
-    def get_major_shareholders(self):
+    def get_major_shareholders(self) -> List[SymbolMajorShareholder]:
         """
         لیست سهامداران عمده
         """
-        if MemoryCache.exists('asset_major_shareholders', self.id):
-            return MemoryCache.fetch('asset_major_shareholders', self.id)
+        if MemoryCache.exists('symbol_major_shareholders', self.id):
+            return MemoryCache.fetch('symbol_major_shareholders', self.id)
 
         company_isin = self.get_details()['company_isin']
         raw_majors = shareholder_core.get_major_shareholders(company_isin)
         ret = []
         for raw_major in raw_majors:
             ret.append(
-                AssetMajorShareholder(self.id,
-                                      company_isin=company_isin,
-                                      holder_name=raw_major['name'],
-                                      holder_id=raw_major['id'],
-                                      percentage=raw_major['percentage'],
-                                      shares_count=raw_major['shares_count'],
-                                      change=raw_major['change'])
+                SymbolMajorShareholder(self.id,
+                                       company_isin=company_isin,
+                                       holder_name=raw_major['name'],
+                                       holder_id=raw_major['id'],
+                                       percentage=raw_major['percentage'],
+                                       shares_count=raw_major['shares_count'],
+                                       change=raw_major['change'])
             )
 
-        MemoryCache.store('asset_major_shareholders', self.id, ret)
+        MemoryCache.store('symbol_major_shareholders', self.id, ret)
 
         return ret
 
     def __str__(self):
-        return f'Asset > {self.id}'
+        return f'Symbol > {self.id}'

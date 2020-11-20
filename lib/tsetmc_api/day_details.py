@@ -3,7 +3,7 @@ from jdatetime import date, time
 
 from .core import day_details as day_details_core
 from .core.cache import PersistentCache
-from .shareholder import AssetMajorShareholder
+from .shareholder import SymbolMajorShareholder
 
 _timezone = timezoneutil.gettz('Asia/Tehran')
 
@@ -117,15 +117,15 @@ def _generate_snapshot_data(price_data, orders_data):
         yield _create_snapshot(last_price_data, last_orders_data)
 
 
-class AssetDayDetails:
-    def __init__(self, asset, jyear, jmonth, jday):
-        self.asset = asset
+class SymbolDayDetails:
+    def __init__(self, symbol, jyear: int, jmonth: int, jday: int):
+        self.symbol = symbol
         self.date = date(year=jyear, month=jmonth, day=jday)
 
         self._load()
 
     def _load(self):
-        cache_minor = f'{self.asset.id}-{self.date.year}-{self.date.month}-{self.date.day}'
+        cache_minor = f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}'
         if PersistentCache.exists('asset_day_details', cache_minor):
             f = PersistentCache.fetch('asset_day_details', cache_minor)
             self._final_shareholders = f['final_shareholders']
@@ -135,26 +135,26 @@ class AssetDayDetails:
             return
 
         mdate = self.date.togregorian()
-        data = day_details_core.load_intraday_data(self.asset.id, mdate.year, mdate.month, mdate.day)
-        asset_details = self.asset.get_details()
+        data = day_details_core.load_intraday_data(self.symbol.id, mdate.year, mdate.month, mdate.day)
+        symbol_details = self.symbol.get_details()
 
         self._final_shareholders = []
         for shdata in data['shareholders']:
-            self._final_shareholders.append(AssetMajorShareholder(self.asset.id,
-                                                                  company_isin=asset_details['company_isin'],
-                                                                  holder_name=shdata['name'],
-                                                                  holder_id=shdata['id'],
-                                                                  percentage=shdata['percentage'],
-                                                                  shares_count=shdata['shares_count']))
+            self._final_shareholders.append(SymbolMajorShareholder(self.symbol.id,
+                                                                   company_isin=symbol_details['company_isin'],
+                                                                   holder_name=shdata['name'],
+                                                                   holder_id=shdata['id'],
+                                                                   percentage=shdata['percentage'],
+                                                                   shares_count=shdata['shares_count']))
 
         self._initial_shareholders = []
         for shdata in data['yesterday_shareholders']:
-            self._initial_shareholders.append(AssetMajorShareholder(self.asset.id,
-                                                                    company_isin=asset_details['company_isin'],
-                                                                    holder_name=shdata['name'],
-                                                                    holder_id=shdata['id'],
-                                                                    percentage=shdata['percentage'],
-                                                                    shares_count=shdata['shares_count']))
+            self._initial_shareholders.append(SymbolMajorShareholder(self.symbol.id,
+                                                                     company_isin=symbol_details['company_isin'],
+                                                                     holder_name=shdata['name'],
+                                                                     holder_id=shdata['id'],
+                                                                     percentage=shdata['percentage'],
+                                                                     shares_count=shdata['shares_count']))
 
         self._trades = []
         for tdata in data['trades']:
@@ -174,31 +174,31 @@ class AssetDayDetails:
             'snapshots': self._snapshots,
         })
 
-    def get_final_major_shareholders(self):
+    def get_final_major_shareholders(self)->List[SymbolMajorShareholder]:
         """
         سهامداران عمده در پایان روز
         """
         return self._final_shareholders
 
-    def get_initial_major_shareholders(self):
+    def get_initial_major_shareholders(self) -> List[SymbolMajorShareholder]:
         """
         سهامداران عمده در ابتدای روز
         """
         return self._initial_shareholders
 
-    def get_trades(self):
+    def get_trades(self) -> List[dict]:
         """
         معاملات
         """
         return self._trades
 
-    def get_snapshots(self):
+    def get_snapshots(self) -> List[dict]:
         """
         تمام لحظات سهم در طور روز
         """
         return self._snapshots
 
-    def get_snapshots_by_time(self, hour, minute, second):
+    def get_snapshots_by_time(self, hour: int, minute: int, second: int) -> List[dict]:
         """
         وضعیت سهم در زمان خاصی از روز
         """
@@ -222,7 +222,7 @@ class AssetDayDetails:
 
         return snapshots
 
-    def get_ticks(self, tick_length):
+    def get_ticks(self, tick_length: int):
         """
         وضعیت سهم در لحظات مختلف روز در بازه‌هایی با طول tick_length
         """
@@ -230,4 +230,4 @@ class AssetDayDetails:
         raise NotImplementedError('sorry, ticks are not supported yet :(')
 
     def __str__(self):
-        return f'AssetDayDetails > {self.asset.id} @ {self.date}'
+        return f'AssetDayDetails > {self.symbol.id} @ {self.date}'

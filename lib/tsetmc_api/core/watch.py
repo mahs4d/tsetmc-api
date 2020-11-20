@@ -13,7 +13,7 @@ def _extract_prices(raw_section):
         if len(cols) in [0, 10]:
             continue
 
-        asset_id = cols[0]
+        symbol_id = cols[0]
         isin = cols[1]
         short_name = cols[2]
         full_name = cols[3]
@@ -36,8 +36,8 @@ def _extract_prices(raw_section):
         z = int(cols[21])
         yval = int(cols[22])
 
-        ret[asset_id] = {
-            'asset_id': asset_id,
+        ret[symbol_id] = {
+            'symbol_id': symbol_id,
             'symbol_short_name': short_name,
             'symbol_long_name': full_name,
             'isin': isin,
@@ -75,7 +75,7 @@ def _extract_orders(raw_section, watch):
 
         cols = row.split(',')
 
-        asset_id = cols[0]
+        symbol_id = cols[0]
         rank = cols[1]
         sell_count = cols[2]
         buy_count = cols[3]
@@ -84,7 +84,7 @@ def _extract_orders(raw_section, watch):
         buy_volume = cols[6]
         sell_volume = cols[7]
 
-        ainfo = watch.get(asset_id, None)
+        ainfo = watch.get(symbol_id, None)
         if ainfo is None:
             continue
         ainfo['buy_orders'].append({
@@ -100,12 +100,12 @@ def _extract_orders(raw_section, watch):
             'volume': int(sell_volume),
         })
 
-        ret[asset_id] = ainfo
+        ret[symbol_id] = ainfo
 
     return ret
 
 
-def fetch_watch_simple_data():
+def fetch_watch_price_data():
     r = requests.get('http://www.tsetmc.com/tsev2/data/MarketWatchInit.aspx?h=0&r=0')
     r.raise_for_status()
 
@@ -128,8 +128,8 @@ def fetch_watch_client_type_data():
     sections = raw_data.split(';')
     for section in sections:
         r = section.split(',')
-        asset_id = r[0]
-        ret[asset_id] = {
+        symbol_id = r[0]
+        ret[symbol_id] = {
             'natural': {
                 'buy_count': int(r[1]),
                 'buy_volume': int(r[3]),
@@ -269,20 +269,20 @@ def fetch_watch_stats_data():
     r.raise_for_status()
     raw_data = r.text
 
-    asset_id = None
+    symbol_id = None
     ret = {}
     sections = raw_data.split(';')
     for section in sections:
         r = section.split(',')
         x = 0
         if len(r) == 3:
-            asset_id = r[0]
+            symbol_id = r[0]
             x = 1
 
         index = int(r[x + 0])
         val = int(r[x + 1]) if '.' not in r[x + 1] else float(r[x + 1])
-        if asset_id not in ret:
-            ret[asset_id] = {
+        if symbol_id not in ret:
+            ret[symbol_id] = {
                 'trades': {},
                 'negative_days': {},
                 'no_trade_days': {},
@@ -327,7 +327,7 @@ def fetch_watch_stats_data():
         else:
             continue
 
-        ret[asset_id][sub_name][indices_obj[index]] = val
+        ret[symbol_id][sub_name][indices_obj[index]] = val
 
     return ret
 
@@ -337,21 +337,21 @@ def fetch_watch_historical_data():
     r.raise_for_status()
     raw_data = r.text
 
-    asset_id = None
+    symbol_id = None
     ret = {}
     sections = raw_data.split(';')
     for section in sections:
         r = section.split(',')
         x = 0
         if len(r) == 11:
-            asset_id = r[0]
+            symbol_id = r[0]
 
             x = 1
 
         index = int(r[x + 0])
-        if asset_id not in ret:
-            ret[asset_id] = {}
-        ret[asset_id][index] = {
+        if symbol_id not in ret:
+            ret[symbol_id] = {}
+        ret[symbol_id][index] = {
             'close': int(r[x + 1]),
             'last': int(r[x + 2]),
             'count': int(r[x + 3]),

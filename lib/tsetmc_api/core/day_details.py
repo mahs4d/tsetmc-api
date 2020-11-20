@@ -8,13 +8,13 @@ from bs4 import BeautifulSoup
 _intraday_pattern = re.compile("var (?P<name>.*)=(?P<content>\[[^;]*\]);")
 
 
-def _load_script_vars_from_web(asset_id, year, month, day):
+def _load_script_vars_from_web(symbol_id, year, month, day):
     d = f'{year:04}{month:02}{day:02}'
     script_variables = {}
 
     # get data from url
-    daily_content = requests.get(f'http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i={asset_id}&d={d}',
-                                 timeout=20).text
+    daily_content = requests.get(f'http://cdn.tsetmc.com/Loader.aspx?ParTree=15131P&i={symbol_id}&d={d}',
+                                 timeout=20, verify=False).text
 
     # find and get script tags
     all_scripts = BeautifulSoup(daily_content, 'lxml').find_all('script')
@@ -40,8 +40,8 @@ def _load_script_vars_from_web(asset_id, year, month, day):
     return script_variables
 
 
-def _extract_asset_details_data(script_vars):
-    asset_details = {
+def _extract_symbol_details_data(script_vars):
+    symbol_details = {
         'full_name': script_vars['InstSimpleData'][0],
         'short_name': script_vars['InstSimpleData'][1],
         'market_short_name': script_vars['InstSimpleData'][2],
@@ -51,7 +51,7 @@ def _extract_asset_details_data(script_vars):
         'base_volume': script_vars['InstSimpleData'][9],
     }
 
-    return asset_details
+    return symbol_details
 
 
 def _extract_price_data(script_vars):
@@ -137,35 +137,35 @@ def _extract_share_holders_data(script_vars):
             'name': shd[5],
         })
 
-    yesterday_share_holders = []
+    previous_share_holders = []
     for shd in script_vars['ShareHolderDataYesterday']:
-        yesterday_share_holders.append({
+        previous_share_holders.append({
             'id': shd[0],
             'shares_count': shd[2],
             'percentage': shd[3],
             'name': shd[5],
         })
 
-    return yesterday_share_holders, share_holders
+    return previous_share_holders, share_holders
 
 
-def load_intraday_data(asset_id, year, month, day):
-    script_vars = _load_script_vars_from_web(asset_id, year, month, day)
+def load_intraday_data(symbol_id, year, month, day):
+    script_vars = _load_script_vars_from_web(symbol_id, year, month, day)
 
-    asset_details = _extract_asset_details_data(script_vars)
+    symbol_details = _extract_symbol_details_data(script_vars)
     price_data = _extract_price_data(script_vars)
 
     if not price_data:
-        raise ValueError('there is no data for this asset in the specified date')
+        raise ValueError('there is no data for this symbol in the specified date')
 
-    yesterday_shareholders, shareholders = _extract_share_holders_data(script_vars)
+    previous_shareholders, shareholders = _extract_share_holders_data(script_vars)
     trades = _extract_trade_data(script_vars)
     orders_data = _extract_orders_data(script_vars)
 
     return {
-        'asset_details': asset_details,
+        'symbol_details': symbol_details,
         'price_data': price_data,
-        'yesterday_shareholders': yesterday_shareholders,
+        'previous_shareholders': previous_shareholders,
         'shareholders': shareholders,
         'trades': trades,
         'orders_data': orders_data,

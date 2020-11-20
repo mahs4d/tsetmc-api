@@ -37,7 +37,7 @@ class PooleHooshmandFilter(Filter):
 def on_poolehooshmand_tick(tick: WatchTick):
     print('-----------------------------------------------------------------')
 
-    asset_ids = tick.get_asset_ids()
+    asset_ids = tick.get_symbol_ids()
     for asset_id in asset_ids:
         print(tick.get_simple_data(asset_id)['symbol_short_name'])
 

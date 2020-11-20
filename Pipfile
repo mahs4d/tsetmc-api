@@ -4,6 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pipenv-setup = "*"
+twine = "*"
 
 [packages]
 requests = "*"
@@ -14,9 +16,10 @@ jdatetime = "*"
 schedule = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
 
 [scripts]
-clean = "rm -r dist build \"./lib/tsetmc_api.egg-info\""
+sync = "pipenv-setup sync --dev"
 build = "python setup.py sdist bdist_wheel"
 publish = "twine upload dist/*"
+clean = "rm -r dist build tsetmc_api.egg-info \"./*.egg-info\""

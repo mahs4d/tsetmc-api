@@ -4,8 +4,8 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def get_asset_details(asset_id):
-    raw = requests.get(f'http://www.tsetmc.com/Loader.aspx?Partree=15131M&i={asset_id}', timeout=20).text
+def get_symbol_details(symbol_id):
+    raw = requests.get(f'http://www.tsetmc.com/Loader.aspx?Partree=15131M&i={symbol_id}', timeout=20, verify=False).text
 
     ret = {}
     trs = BeautifulSoup(raw, 'lxml').find_all('tr')
@@ -16,10 +16,10 @@ def get_asset_details(asset_id):
     return ret
 
 
-def get_daily_history(asset_id):
+def get_daily_history(symbol_id):
     daily_content = requests.get(
-        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={asset_id}&Top=99999&A=0',
-        timeout=20).text
+        f'http://members.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i={symbol_id}&Top=99999&A=0',
+        timeout=20, verify=False).text
     raw_ticks = daily_content.split(';')
 
     ticks = []

@@ -3,7 +3,7 @@ import pickle
 from collections import defaultdict
 from os import path
 
-_cache_dir = os.getenv('TSETMC_CACHE_DIRECTORY', path.expanduser('~/.tsetmc-api/cache'))
+_cache_dir = os.getenv('TSETMC_API_CACHE_DIRECTORY', path.expanduser('~/.tsetmc-api/cache'))
 
 
 class PersistentCache:
@@ -57,3 +57,7 @@ class MemoryCache:
     def remove(major, minor):
         if MemoryCache.exists(major, minor):
             del MemoryCache._cache[major][minor]
+
+    @staticmethod
+    def clear(self):
+        MemoryCache._cache.clear()
