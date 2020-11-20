@@ -1,3 +1,5 @@
+from typing import List
+
 from dateutil import tz as timezoneutil
 from jdatetime import date, time
 
@@ -174,7 +176,7 @@ class SymbolDayDetails:
             'snapshots': self._snapshots,
         })
 
-    def get_final_major_shareholders(self)->List[SymbolMajorShareholder]:
+    def get_final_major_shareholders(self) -> List[SymbolMajorShareholder]:
         """
         سهامداران عمده در پایان روز
         """
