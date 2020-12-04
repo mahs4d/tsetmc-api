@@ -1,24 +1,32 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import time
-from typing import List, Dict
+from datetime import date
+from typing import List, Dict, Iterator
 
 from tsetmc_api.types import Price
-from tsetmc_api.utils import int_to_time
+from tsetmc_api.utils import get_timestamp
 
 
 @dataclass
 class SnapshotOrder:
-    time: time
+    time: int
     price: Price
     count: int
     volume: int
 
+    def copy(self):
+        return SnapshotOrder(
+            time=self.time,
+            price=self.price,
+            count=self.count,
+            volume=self.volume,
+        )
+
 
 @dataclass
 class Snapshot:
-    time: time
+    time: int
     open: Price
     close: Price
     last: Price
@@ -31,11 +39,27 @@ class Snapshot:
     buy_orders: List[SnapshotOrder]
     sell_orders: List[SnapshotOrder]
 
+    def copy(self):
+        return Snapshot(
+            time=self.time,
+            open=self.open,
+            close=self.close,
+            last=self.last,
+            high=self.high,
+            low=self.low,
+            yesterday=self.yesterday,
+            count=self.count,
+            volume=self.volume,
+            state=self.state,
+            buy_orders=[x.copy() for x in self.buy_orders],
+            sell_orders=[x.copy() for x in self.sell_orders],
+        )
+
     @staticmethod
-    def from_raw_day_details(price_data: Dict, orders_data: List[Dict]) -> Snapshot:
+    def from_raw_day_details(date: date, price_data: Dict, orders_data: List[Dict]) -> Snapshot:
         max_t = price_data['t']
         snapshot = Snapshot(
-            time=int_to_time(max_t),
+            time=get_timestamp(date, max_t),
             last=price_data['lst'],
             yesterday=price_data['y'],
             open=price_data['o'],
@@ -52,13 +76,13 @@ class Snapshot:
         for to in orders_data:
             if to is not None:
                 snapshot.buy_orders.append(SnapshotOrder(
-                    time=int_to_time(to['t']),
+                    time=get_timestamp(date, to['t']),
                     count=to['bcnt'],
                     volume=to['bv'],
                     price=to['bp'],
                 ))
                 snapshot.sell_orders.append(SnapshotOrder(
-                    time=int_to_time(to['t']),
+                    time=get_timestamp(date, to['t']),
                     count=to['scnt'],
                     volume=to['sv'],
                     price=to['sp'],
@@ -66,13 +90,13 @@ class Snapshot:
 
                 max_t = max(max_t, to['t'])
 
-        snapshot.time = int_to_time(max_t)
+        snapshot.time = get_timestamp(date, max_t)
 
         return snapshot
 
     @staticmethod
-    def generate_snapshots_from_raw_day_detail_data(price_data: List[Dict], orders_data: List[Dict]) -> Iterator[
-        Snapshot]:
+    def generate_snapshots_from_raw_day_detail_data(date: date, price_data: List[Dict], orders_data: List[Dict]) -> \
+            Iterator[Snapshot]:
         max_pdi = len(price_data)
         max_odi = len(orders_data)
         pdi = 0
@@ -119,4 +143,4 @@ class Snapshot:
                     orders_found[rank] = order
                     last_orders_data[rank] = order
 
-            yield Snapshot.from_raw_day_details(last_price_data, last_orders_data)
+            yield Snapshot.from_raw_day_details(date, last_price_data, last_orders_data)

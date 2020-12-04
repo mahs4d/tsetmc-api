@@ -60,7 +60,7 @@ def get_major_shareholder_details(company_isin, holder_id):
             })
         elif len(x) == 4:
             other_companies.append({
-                'asset_id': x[0][1:] if '#' in x[0] else x[0],
+                'symbol_id': x[0][1:] if '#' in x[0] else x[0],
                 'company_name': x[1],
                 'shares_count': int(x[2]),
                 'percentage': float(x[3]),
@@ -68,5 +68,5 @@ def get_major_shareholder_details(company_isin, holder_id):
 
     return {
         'activities': ticks,
-        'other_assets': other_companies,
+        'other_symbols': other_companies,
     }

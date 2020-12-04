@@ -4,7 +4,7 @@ from jdatetime import date as jdate
 
 from .core import shareholder as shareholder_core
 from .core import symbol as symbol_core
-from .core.cache import MemoryCache
+from tsetmc_api.cache import MemoryCache
 from .day_details import SymbolDayDetails
 from .shareholder import SymbolMajorShareholder
 
