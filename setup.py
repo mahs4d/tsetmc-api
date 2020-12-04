@@ -1,8 +1,15 @@
-from setuptools import setup
+from os import path
+
+from setuptools import setup, find_packages
+
+here = path.abspath(path.dirname(__file__))
+
+with open(path.join(here, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
     name="tsetmc-api",
-    version="4.0.0",
+    version="4.0.1",
     python_requires=">=3.7",
     install_requires=[
         "beautifulsoup4==4.9.3",
@@ -70,7 +77,7 @@ setup(
         ]
     },
     package_dir={"": "lib"},
-    packages=["tsetmc_api", "tsetmc_api.core"],
+    packages=find_packages(exclude=["scripts"]),
     url="https://github.com/mahs4d/tsetmc-api",
     license="MIT",
     author="Mahdi Sadeghi",
