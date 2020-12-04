@@ -3,4 +3,4 @@ from .symbol import Symbol
 from .watch import Watch, Filter, AtiFilter, SahamFilter, WatchTick, SandoghFilter, KalaForoushFilter, \
     EkhtiarForoushFilter, HaghTaghaddomFilter, OraghMosharekatFilter, PayeFarabourseFilter
 
-__version__ = '4.0.0'
+__version__ = '4.0.2'
