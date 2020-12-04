@@ -1,0 +1,2 @@
+SymbolId = str
+Price = int

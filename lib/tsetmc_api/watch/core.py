@@ -1,159 +1,7 @@
+import math
 from traceback import print_exc
 
 import requests
-
-
-def _extract_prices(raw_section):
-    ret = {}
-
-    rows = raw_section.split(';')
-    for row in rows:
-        try:
-            if row == '':
-                continue
-
-            cols = row.split(',')
-            if len(cols) in [0, 10]:
-                continue
-
-            symbol_id = cols[0]
-            isin = cols[1]
-            short_name = cols[2]
-            full_name = cols[3]
-            open_price = int(cols[5])
-            close_price = int(cols[6])
-            last_price = int(cols[7])
-            count = int(cols[8])
-            volume = int(cols[9])
-            value = int(cols[10])
-            low_price = int(cols[11])
-            high_price = int(cols[12])
-            yesterday = int(cols[13])
-            eps = int(cols[14]) if cols[14] != '' else None
-            base_volume = int(cols[15])
-            visit_count = int(cols[16])
-            flow = int(cols[17])
-            group = int(cols[18])
-            max_price = int(float(cols[19]))
-            min_price = int(float(cols[20]))
-            z = int(cols[21])
-            yval = int(cols[22])
-
-            ret[symbol_id] = {
-                'symbol_id': symbol_id,
-                'symbol_short_name': short_name,
-                'symbol_long_name': full_name,
-                'isin': isin,
-                'open': open_price,
-                'close': close_price,
-                'last': last_price,
-                'high': high_price,
-                'low': low_price,
-                'count': count,
-                'volume': volume,
-                'value': value,
-                'yesterday': yesterday,
-                'eps': eps,
-                'base_volume': base_volume,
-                'visits_count': visit_count,
-                'flow': flow,
-                'group_code': group,
-                'max': max_price,
-                'min': min_price,
-                'z': z,
-                'yval': yval,
-                'buy_orders': [],
-                'sell_orders': [],
-            }
-        except:
-            print_exc()
-
-    return ret
-
-
-def _extract_orders(raw_section, watch):
-    ret = {}
-    rows = raw_section.split(';')
-    for row in rows:
-        try:
-            if row == '':
-                continue
-
-            cols = row.split(',')
-
-            symbol_id = cols[0]
-            rank = cols[1]
-            sell_count = cols[2]
-            buy_count = cols[3]
-            buy_price = cols[4]
-            sell_price = cols[5]
-            buy_volume = cols[6]
-            sell_volume = cols[7]
-
-            ainfo = watch.get(symbol_id, None)
-            if ainfo is None:
-                continue
-            ainfo['buy_orders'].append({
-                'rank': int(rank),
-                'count': int(buy_count),
-                'price': int(buy_price),
-                'volume': int(buy_volume),
-            })
-            ainfo['sell_orders'].append({
-                'rank': int(rank),
-                'count': int(sell_count),
-                'price': int(sell_price),
-                'volume': int(sell_volume),
-            })
-
-            ret[symbol_id] = ainfo
-        except:
-            print_exc()
-
-    return ret
-
-
-def fetch_watch_price_data():
-    r = requests.get('http://www.tsetmc.com/tsev2/data/MarketWatchInit.aspx?h=0&r=0', timeout=20, verify=False)
-    r.raise_for_status()
-
-    raw_data = r.text
-    sections = raw_data.split('@')
-
-    watch = _extract_prices(sections[2])
-    watch = _extract_orders(sections[3], watch)
-    refid = sections[4]
-
-    return watch, refid
-
-
-def fetch_watch_client_type_data():
-    r = requests.get('http://www.tsetmc.com/tsev2/data/ClientTypeAll.aspx', timeout=20, verify=False)
-    r.raise_for_status()
-    raw_data = r.text
-
-    ret = {}
-    sections = raw_data.split(';')
-    for section in sections:
-        r = section.split(',')
-        symbol_id = r[0]
-        ret[symbol_id] = {
-            'natural': {
-                'buy_count': int(r[1]),
-                'buy_volume': int(r[3]),
-                'sell_count': int(r[5]),
-                'sell_volume': int(r[7]),
-            },
-            'legal': {
-                'buy_count': int(r[2]),
-                'buy_volume': int(r[4]),
-                'sell_count': int(r[6]),
-                'sell_volume': int(r[8]),
-            },
-        }
-
-    return ret
-
 
 _STATS_TRADES_INDICES = {
     1: 'average_value_3_month',  # میانگین ارزش معاملات در 3 ماه گذشته
@@ -229,18 +77,18 @@ _STATS_CLOSED_DAYS_INDICES = {
 }
 
 _STATS_CLIENT_TYPE_INDICES = {
-    50: 'natural_buy_average_volume_3_month',  # میانگین حجم خرید حقیقی در 3 ماه گذشته
-    51: 'natural_buy_average_volume_12_month',  # میانگین حجم خرید حقیقی در 12 ماه گذشته
-    52: 'natural_buy_average_volume_rank_3_month',  # رتبه حجم خرید حقیقی در 3 ماه گذشته
-    53: 'natural_buy_average_volume_rank_12_month',  # رتبه حجم خرید حقیقی در 12 ماه گذشته
+    50: 'individual_buy_average_volume_3_month',  # میانگین حجم خرید حقیقی در 3 ماه گذشته
+    51: 'individual_buy_average_volume_12_month',  # میانگین حجم خرید حقیقی در 12 ماه گذشته
+    52: 'individual_buy_average_volume_rank_3_month',  # رتبه حجم خرید حقیقی در 3 ماه گذشته
+    53: 'individual_buy_average_volume_rank_12_month',  # رتبه حجم خرید حقیقی در 12 ماه گذشته
     54: 'legal_buy_average_volume_3_month',  # میانگین حجم خرید حقوقی در 3 ماه گذشته
     55: 'legal_buy_average_volume_12_month',  # میانگین حجم خرید حقوقی در 12 ماه گذشته
     56: 'legal_buy_average_volume_rank_3_month',  # رتبه حجم خرید حقوقی در 3 ماه گذشته
     57: 'legal_buy_average_volume_rank_12_month',  # رتبه حجم خرید حقوقی در 12 ماه گذشته
-    58: 'natural_buy_average_count_3_month',  # میانگین تعداد خریدار حقیقی در 3 ماه گذشته
-    59: 'natural_buy_average_count_12_month',  # میانگین تعداد خریدار حقیقی در 12 ماه گذشته
-    60: 'natural_buy_average_count_rank_3_month',  # رتبه تعداد خریدار حقیقی در 3 ماه گذشته
-    61: 'natural_buy_average_count_rank_12_month',  # رتبه تعداد خریدار حقیقی در 12 ماه گذشته
+    58: 'individual_buy_average_count_3_month',  # میانگین تعداد خریدار حقیقی در 3 ماه گذشته
+    59: 'individual_buy_average_count_12_month',  # میانگین تعداد خریدار حقیقی در 12 ماه گذشته
+    60: 'individual_buy_average_count_rank_3_month',  # رتبه تعداد خریدار حقیقی در 3 ماه گذشته
+    61: 'individual_buy_average_count_rank_12_month',  # رتبه تعداد خریدار حقیقی در 12 ماه گذشته
     62: 'legal_buy_average_count_3_month',  # میانگین تعداد خریدار حقوقی در 3 ماه گذشته
     63: 'legal_buy_average_count_12_month',  # میانگین تعداد خریدار حقوقی در 12 ماه گذشته
     64: 'legal_buy_average_count_rank_3_month',  # رتبه تعداد خریدار حقوقی در 3 ماه گذشته
@@ -249,18 +97,18 @@ _STATS_CLIENT_TYPE_INDICES = {
     67: 'total_buy_average_count_12_month',  # میانگین تعداد خریداران در 12 ماه گذشته
     68: 'total_buy_average_count_rank_3_month',  # رتبه تعداد خریداران در 3 ماه گذشته
     69: 'total_buy_average_count_rank_12_month',  # رتبه تعداد خریداران در 12 ماه گذشته
-    70: 'natural_sell_average_volume_3_month',  # میانگین حجم فروش حقیقی در 3 ماه گذشته
-    71: 'natural_sell_average_volume_12_month',  # میانگین حجم فروش حقیقی در 12 ماه گذشته
-    72: 'natural_sell_average_volume_rank_3_month',  # رتبه حجم فروش حقیقی در 3 ماه گذشته
-    73: 'natural_sell_average_volume_rank_12_month',  # رتبه حجم فروش حقیقی در 12 ماه گذشته
+    70: 'individual_sell_average_volume_3_month',  # میانگین حجم فروش حقیقی در 3 ماه گذشته
+    71: 'individual_sell_average_volume_12_month',  # میانگین حجم فروش حقیقی در 12 ماه گذشته
+    72: 'individual_sell_average_volume_rank_3_month',  # رتبه حجم فروش حقیقی در 3 ماه گذشته
+    73: 'individual_sell_average_volume_rank_12_month',  # رتبه حجم فروش حقیقی در 12 ماه گذشته
     74: 'legal_sell_average_volume_3_month',  # میانگین حجم فروش حقوقی در 3 ماه گذشته
     75: 'legal_sell_average_volume_12_month',  # میانگین حجم فروش حقوقی در 12 ماه گذشته
     76: 'legal_sell_average_volume_rank_3_month',  # رتبه حجم فروش حقوقی در 3 ماه گذشته
     77: 'legal_sell_average_volume_rank_12_month',  # رتبه حجم فروش حقوقی در 12 ماه گذشته
-    78: 'natural_sell_average_count_3_month',  # میانگین تعداد فروشنده حقیقی در 3 ماه گذشته
-    79: 'natural_sell_average_count_12_month',  # میانگین تعداد فروشنده حقیقی در 12 ماه گذشته
-    80: 'natural_sell_average_count_rank_3_month',  # رتبه تعداد فروشنده حقیقی در 3 ماه گذشته
-    81: 'natural_sell_average_count_rank_12_month',  # رتبه تعداد فروشنده حقیقی در 12 ماه گذشته
+    78: 'individual_sell_average_count_3_month',  # میانگین تعداد فروشنده حقیقی در 3 ماه گذشته
+    79: 'individual_sell_average_count_12_month',  # میانگین تعداد فروشنده حقیقی در 12 ماه گذشته
+    80: 'individual_sell_average_count_rank_3_month',  # رتبه تعداد فروشنده حقیقی در 3 ماه گذشته
+    81: 'individual_sell_average_count_rank_12_month',  # رتبه تعداد فروشنده حقیقی در 12 ماه گذشته
     82: 'legal_sell_average_count_3_month',  # میانگین تعداد فروشنده حقوقی در 3 ماه گذشته
     83: 'legal_sell_average_count_12_month',  # میانگین تعداد فروشنده حقوقی در 12 ماه گذشته
     84: 'legal_sell_average_volume_rank_3_month',  # رتبه تعداد فروشنده حقوقی در 3 ماه گذشته
@@ -270,6 +118,63 @@ _STATS_CLIENT_TYPE_INDICES = {
     88: 'total_sell_average_count_rank_3_month',  # رتبه تعداد فروشندگان در 3 ماه گذشته
     89: 'total_sell_average_count_rank_12_month',  # رتبه تعداد فروشندگان در 12 ماه گذشته
 }
+
+
+def fetch_watch_price_data():
+    r = requests.get('http://www.tsetmc.com/tsev2/data/MarketWatchInit.aspx?h=0&r=0', timeout=20, verify=False)
+    r.raise_for_status()
+
+    raw_data = r.text
+    sections = raw_data.split('@')
+
+    watch, min_heven = _extract_prices(sections[2])
+    watch = _extract_orders(sections[3], watch)
+    refid = sections[4]
+
+    return watch, int(refid), min_heven
+
+
+def fetch_watch_price_update_data(min_heven: int, refid: int):
+    r = requests.get(
+        f'http://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h={5 * math.floor(min_heven / 5)}&r={25 * math.floor(refid / 25)}',
+        timeout=20,
+        verify=False)
+    r.raise_for_status()
+    raw_data = r.text
+    sections = raw_data.split('@')
+
+    watch, min_heven = _extract_update_prices(sections[2])
+    watch = _extract_orders(sections[3], watch)
+
+    return watch, int(refid), min_heven
+
+
+def fetch_watch_client_type_data():
+    r = requests.get('http://www.tsetmc.com/tsev2/data/ClientTypeAll.aspx', timeout=20, verify=False)
+    r.raise_for_status()
+    raw_data = r.text
+
+    ret = {}
+    sections = raw_data.split(';')
+    for section in sections:
+        r = section.split(',')
+        symbol_id = r[0]
+        ret[symbol_id] = {
+            'individual': {
+                'buy_count': int(r[1]),
+                'buy_volume': int(r[3]),
+                'sell_count': int(r[5]),
+                'sell_volume': int(r[7]),
+            },
+            'legal': {
+                'buy_count': int(r[2]),
+                'buy_volume': int(r[4]),
+                'sell_count': int(r[6]),
+                'sell_volume': int(r[8]),
+            },
+        }
+
+    return ret
 
 
 def fetch_watch_stats_data():
@@ -301,9 +206,6 @@ def fetch_watch_stats_data():
                 'closed_days': {},
                 'client_type': {},
             }
-
-        sub_name = None
-        indices_obj = None
 
         if 1 <= index < 18:
             sub_name = 'trades'
@@ -372,3 +274,166 @@ def fetch_watch_historical_data():
         }
 
     return ret
+
+
+def _extract_prices(raw_section):
+    ret = {}
+
+    min_heven = 0
+    rows = raw_section.split(';')
+    for row in rows:
+        try:
+            if row == '':
+                continue
+
+            cols = row.split(',')
+            if len(cols) in [0, 10]:
+                continue
+
+            symbol_id = cols[0]
+            isin = cols[1]
+            short_name = cols[2]
+            full_name = cols[3]
+            heven = int(cols[4])
+            open_price = int(cols[5])
+            close_price = int(cols[6])
+            last_price = int(cols[7])
+            count = int(cols[8])
+            volume = int(cols[9])
+            value = int(cols[10])
+            low_price = int(cols[11])
+            high_price = int(cols[12])
+            yesterday = int(cols[13])
+            eps = int(cols[14]) if cols[14] != '' else None
+            base_volume = int(cols[15])
+            visit_count = int(cols[16])
+            flow = int(cols[17])
+            group = int(cols[18])
+            max_price = int(float(cols[19]))
+            min_price = int(float(cols[20]))
+            z = int(cols[21])
+            yval = int(cols[22])
+
+            min_heven = max(min_heven, heven)
+            ret[symbol_id] = {
+                'symbol_id': symbol_id,
+                'symbol_short_name': short_name,
+                'symbol_long_name': full_name,
+                'isin': isin,
+                'heven': heven,
+                'open': open_price,
+                'close': close_price,
+                'last': last_price,
+                'high': high_price,
+                'low': low_price,
+                'count': count,
+                'volume': volume,
+                'value': value,
+                'yesterday': yesterday,
+                'eps': eps,
+                'base_volume': base_volume,
+                'visits_count': visit_count,
+                'flow': flow,
+                'group_code': group,
+                'max': max_price,
+                'min': min_price,
+                'z': z,
+                'yval': yval,
+                'buy_orders': [],
+                'sell_orders': [],
+            }
+        except:
+            print_exc()
+
+    return ret, min_heven
+
+
+def _extract_orders(raw_section, watch):
+    ret = watch
+
+    rows = raw_section.split(';')
+    for row in rows:
+        try:
+            if row == '':
+                continue
+
+            cols = row.split(',')
+
+            symbol_id = cols[0]
+            rank = cols[1]
+            sell_count = cols[2]
+            buy_count = cols[3]
+            buy_price = cols[4]
+            sell_price = cols[5]
+            buy_volume = cols[6]
+            sell_volume = cols[7]
+
+            ainfo = watch.get(symbol_id, None)
+            if ainfo is None:
+                watch[symbol_id] = {
+                    'buy_orders': [],
+                    'sell_orders': [],
+                }
+                ainfo = watch[symbol_id]
+            ainfo['buy_orders'].append({
+                'rank': int(rank),
+                'count': int(buy_count),
+                'price': int(buy_price),
+                'volume': int(buy_volume),
+            })
+            ainfo['sell_orders'].append({
+                'rank': int(rank),
+                'count': int(sell_count),
+                'price': int(sell_price),
+                'volume': int(sell_volume),
+            })
+
+            ret[symbol_id] = ainfo
+        except:
+            print_exc()
+
+    return ret
+
+
+def _extract_update_prices(raw_section):
+    ret = {}
+
+    min_heven = 0
+    rows = raw_section.split(';')
+    for row in rows:
+        try:
+            if row == '':
+                continue
+
+            cols = row.split(',')
+
+            symbol_id = cols[0]
+            heven = int(cols[1])
+            open_price = int(cols[2])
+            close_price = int(cols[3])
+            last_price = int(cols[4])
+            count = int(cols[5])
+            volume = int(cols[6])
+            value = int(cols[7])
+            low_price = int(cols[8])
+            high_price = int(cols[9])
+
+            min_heven = max(min_heven, heven)
+            ret[symbol_id] = {
+                'symbol_id': symbol_id,
+                'heven': heven,
+                'open': open_price,
+                'close': close_price,
+                'last': last_price,
+                'high': high_price,
+                'low': low_price,
+                'count': count,
+                'volume': volume,
+                'value': value,
+                'buy_orders': [],
+                'sell_orders': [],
+            }
+        except:
+            print_exc()
+
+    return ret, min_heven
