@@ -5,7 +5,7 @@ import schedule
 
 from . import core as watch_core
 from .filter import Filter
-from .types import WatchTick, SymbolHistoricalDayData, SymbolClientTypeData, SymbolPriceData, SymbolOrderData
+from .watch_tick import WatchTick, SymbolHistoricalDayData, SymbolClientTypeData, SymbolPriceData, SymbolOrderData
 
 
 class Watch:

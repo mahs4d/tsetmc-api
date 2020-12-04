@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from tsetmc_api.types import SymbolId
-from ..types import WatchTick
+from ..watch_tick import WatchTick
 
 
 class Filter(ABC):

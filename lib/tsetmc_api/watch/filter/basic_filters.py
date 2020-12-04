@@ -1,5 +1,5 @@
 from .base import Filter
-from ..types import WatchTick
+from ..watch_tick import WatchTick
 
 
 class SahamFilter(Filter):

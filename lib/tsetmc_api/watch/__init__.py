@@ -9,5 +9,5 @@ from .filter import (
     SandoghFilter,
     SahamFilter
 )
-from .types import WatchTick
+from .watch_tick import WatchTick
 from .watch import Watch

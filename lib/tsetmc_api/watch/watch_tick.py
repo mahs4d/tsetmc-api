@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Dict, List, Union
 
-from ..types import SymbolId, Price
+from tsetmc_api.types import SymbolId, Price
 
 
 @dataclass
