@@ -7,30 +7,71 @@ from tsetmc_api.cache import PersistentCache
 from tsetmc_api.shareholder import SymbolMajorShareholder
 from tsetmc_api.utils import get_timezone
 from . import core as day_details_core
+from .exceptions import NoDataError
 from .snapshot import Snapshot
 from .trade import Trade
 
 
 class SymbolDayDetails:
-    def __init__(self, symbol, jyear: int, jmonth: int, jday: int):
+    def __init__(self, symbol, jyear: int, jmonth: int, jday: int,
+                 load_from_cache: bool = True, save_to_cache: bool = True):
         self.symbol = symbol
         self.date = date(year=jyear, month=jmonth, day=jday)
         self.greg_date = self.date.togregorian()
+        self.load_from_cache = load_from_cache
+        self.save_to_cache = save_to_cache
+        self._is_no_data = False
 
         self._load()
 
-    def _load(self):
-        cache_minor = f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}'
-        if PersistentCache.exists('symbol_day_details', cache_minor):
-            f = PersistentCache.fetch('symbol_day_details', cache_minor)
+    def _get_cache_minor(self):
+        return f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}'
+
+    def _save_to_cache(self):
+        if not self.save_to_cache:
+            return
+
+        if self._is_no_data:
+            PersistentCache.store('symbol_day_details', self._get_cache_minor(), {
+                'no_data': True,
+            })
+            return
+
+        PersistentCache.store('symbol_day_details', self._get_cache_minor(), {
+            'final_shareholders': self._final_shareholders,
+            'initial_shareholders': self._initial_shareholders,
+            'trades': self._trades,
+            'snapshots': self._snapshots,
+        })
+
+    def _load_from_cache(self) -> bool:
+        if not self.load_from_cache:
+            return False
+
+        if PersistentCache.exists('symbol_day_details', self._get_cache_minor()):
+            f = PersistentCache.fetch('symbol_day_details', self._get_cache_minor())
+
+            if 'no_data' in f:
+                self._is_no_data = True
+                raise NoDataError('there is no data for this symbol in the specified date')
+
             self._final_shareholders = f['final_shareholders']
             self._initial_shareholders = f['initial_shareholders']
             self._trades = f['trades']
             self._snapshots = f['snapshots']
-            return
+            print('loaded from cache')
+            return True
 
+        return False
+
+    def _load_from_tsetmc(self):
         mdate = self.date.togregorian()
-        data = day_details_core.load_intraday_data(self.symbol.id, mdate.year, mdate.month, mdate.day)
+        try:
+            data = day_details_core.load_intraday_data(self.symbol.id, mdate.year, mdate.month, mdate.day)
+        except NoDataError as ex:
+            self._is_no_data = True
+            self._save_to_cache()
+            raise ex
         symbol_details = self.symbol.get_details()
 
         self._final_shareholders = []
@@ -59,12 +100,13 @@ class SymbolDayDetails:
                                                                  data['orders_data'])
         )
 
-        PersistentCache.store('asset_day_details', cache_minor, {
-            'final_shareholders': self._final_shareholders,
-            'initial_shareholders': self._initial_shareholders,
-            'trades': self._trades,
-            'snapshots': self._snapshots,
-        })
+    def _load(self):
+        if self._load_from_cache():
+            return
+
+        self._load_from_tsetmc()
+
+        self._save_to_cache()
 
     def get_final_major_shareholders(self) -> List[SymbolMajorShareholder]:
         """

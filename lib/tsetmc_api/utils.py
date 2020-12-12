@@ -1,6 +1,7 @@
 from datetime import datetime, time, date
 
 from dateutil import tz as timezoneutil
+from jdatetime import timedelta as jtimedelta, datetime as jdatetime
 
 _timezone = timezoneutil.gettz('Asia/Tehran')
 
@@ -44,3 +45,8 @@ def get_timestamp(date: date, i: int) -> int:
 
     return int(datetime(year=date.year, month=date.month, day=date.day,
                         hour=h, minute=m, second=s, tzinfo=get_timezone()).timestamp())
+
+
+def jalali_daterange(start_time: jdatetime, end_time: jdatetime):
+    for n in range(int((end_time - start_time).days)):
+        yield start_time + jtimedelta(n)

@@ -3,14 +3,14 @@ from os import path
 from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
-lib = path.join(here, 'lib')
+lib = path.join(here, "lib")
 
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
     name="tsetmc-api",
-    version="4.0.2",
+    version="4.1.0",
     python_requires=">=3.7",
     install_requires=[
         "beautifulsoup4==4.9.3",
@@ -78,7 +78,8 @@ setup(
         ]
     },
     package_dir={"": "lib"},
-    packages=find_packages(where=lib, exclude=["scripts"]),
+    packages=find_packages(where=lib, exclude=["tsetmc_api.bin", "scripts"]),
+    entry_points={"console_scripts": ["tsetmc-loader = tsetmc_api.bin.tsetmc_loader:main"]},
     url="https://github.com/mahs4d/tsetmc-api",
     license="MIT",
     author="Mahdi Sadeghi",

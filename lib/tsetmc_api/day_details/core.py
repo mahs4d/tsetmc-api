@@ -5,6 +5,8 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+from .exceptions import NoDataError
+
 _intraday_pattern = re.compile("var (?P<name>.*)=(?P<content>\[[^;]*\]);")
 
 
@@ -156,7 +158,7 @@ def load_intraday_data(symbol_id, year, month, day):
     price_data = _extract_price_data(script_vars)
 
     if not price_data:
-        raise ValueError('there is no data for this symbol in the specified date')
+        raise NoDataError('there is no data for this symbol in the specified date')
 
     previous_shareholders, shareholders = _extract_share_holders_data(script_vars)
     trades = _extract_trade_data(script_vars)
