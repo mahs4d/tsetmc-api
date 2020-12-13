@@ -59,7 +59,6 @@ class SymbolDayDetails:
             self._initial_shareholders = f['initial_shareholders']
             self._trades = f['trades']
             self._snapshots = f['snapshots']
-            print('loaded from cache')
             return True
 
         return False

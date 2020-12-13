@@ -59,6 +59,7 @@ class SymbolDataFile:
         symbol = Symbol(symbol_id=symbol_id)
         with zipfile.ZipFile(file_location, 'w') as zp:
             for jdate in jalali_daterange(start_time=start_time, end_time=end_time):
+                error_count = 0
                 while True:
                     print(f'Loading {jdate.year}/{jdate.month}/{jdate.day}')
                     file_name = f'{jdate.year}-{jdate.month}-{jdate.day}.pickle'
@@ -73,6 +74,10 @@ class SymbolDataFile:
                         break
                     except Exception as ex:
                         print(ex)
+                        error_count += 1
+                        if error_count >= 3:
+                            print('Too Many Errors on This Day, Skipping It :)')
+                            break
 
             with zp.open('information.pickle', 'w') as infop:
                 pickle.dump(SymbolDataFileInformation(
