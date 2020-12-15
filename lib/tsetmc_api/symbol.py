@@ -2,9 +2,9 @@ from typing import List
 
 from jdatetime import date as jdate
 
+from tsetmc_api.cache import MemoryCache
 from .core import shareholder as shareholder_core
 from .core import symbol as symbol_core
-from tsetmc_api.cache import MemoryCache
 from .day_details import SymbolDayDetails
 from .shareholder import SymbolMajorShareholder
 
@@ -85,11 +85,11 @@ class Symbol:
 
         return ret
 
-    def get_day_details(self, jyear: int, jmonth: int, jday: int) -> SymbolDayDetails:
+    def get_day_details(self, jyear: int, jmonth: int, jday: int, save_raw_data: bool = False) -> SymbolDayDetails:
         """
         اطلاعات یک روز خاص در سابقه
         """
-        return SymbolDayDetails(self, jyear, jmonth, jday)
+        return SymbolDayDetails(self, jyear, jmonth, jday, save_raw_data=save_raw_data)
 
     def get_client_type_history(self) -> List[dict]:
         """
