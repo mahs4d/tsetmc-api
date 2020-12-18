@@ -10,7 +10,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="tsetmc-api",
-    version="4.2.1",
+    version="4.2.3",
     python_requires=">=3.7",
     install_requires=[
         "beautifulsoup4==4.9.3",

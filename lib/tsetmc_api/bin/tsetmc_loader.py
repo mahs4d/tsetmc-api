@@ -8,13 +8,14 @@ from tsetmc_api.types import SymbolId
 
 def generate(symbol_id: SymbolId, start_time: jdatetime, end_time: jdatetime):
     file_name = f'{symbol_id}_{start_time.strftime("%Y%m%d")}_{end_time.strftime("%Y%m%d")}.zip'
-    print(f'Generating Data File {file_name} ...')
+    print(
+        f'Generating Data File {file_name} from {start_time.strftime("%Y/%m/%d")} to {end_time.strftime("%Y/%m/%d")}...')
     SymbolDataFile.generate_data_file(symbol_id=symbol_id,
                                       start_time=start_time,
                                       end_time=end_time,
                                       file_location=file_name)
 
-generate('35425587644337450', jdatetime(1399, 9,3), jdatetime(1399, 9, 7))
+
 def install(file_location: str):
     SymbolDataFile.install_data_file(file_location)
 
@@ -31,7 +32,6 @@ def main():
             sys.exit(1)
 
         symbol_id = sys.argv[2]
-
         if len(sys.argv) > 3:
             start_time = jdatetime.strptime(sys.argv[3], '%Y-%m-%d')
         else:

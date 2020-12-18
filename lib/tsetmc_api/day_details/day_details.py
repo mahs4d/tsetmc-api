@@ -47,6 +47,7 @@ class SymbolDayDetails:
             self._initial_shareholders = f['initial_shareholders']
             self._trades = f['trades']
             self._snapshots = f['snapshots']
+            print('loaded from cache')
             return True
         elif PersistentCache.exists('symbol_day_details', self._get_cache_minor(is_raw=True)):
             f = PersistentCache.fetch('symbol_day_details', self._get_cache_minor(is_raw=True))

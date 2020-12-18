@@ -17,6 +17,7 @@ from tsetmc_api.utils import jalali_daterange
 @dataclass
 class SymbolDataFileInformation:
     symbol_id: SymbolId
+    symbol_name: str
     start_time: jdatetime
     end_time: jdatetime
 
@@ -58,6 +59,14 @@ class SymbolDataFile:
     def generate_data_file(symbol_id: SymbolId, start_time: jdatetime, end_time: jdatetime, file_location: str):
         symbol = Symbol(symbol_id=symbol_id)
         with zipfile.ZipFile(file_location, 'w') as zp:
+            with zp.open('information.pickle', 'w') as infop:
+                pickle.dump(SymbolDataFileInformation(
+                    symbol_id=symbol_id,
+                    symbol_name=Symbol(symbol_id).get_details()['short_name'],
+                    start_time=start_time,
+                    end_time=end_time,
+                ), infop)
+
             for jdate in jalali_daterange(start_time=start_time, end_time=end_time):
                 error_count = 0
                 while True:
@@ -78,10 +87,3 @@ class SymbolDataFile:
                         if error_count >= 3:
                             print('Too Many Errors on This Day, Skipping It :)')
                             break
-
-            with zp.open('information.pickle', 'w') as infop:
-                pickle.dump(SymbolDataFileInformation(
-                    symbol_id=symbol_id,
-                    start_time=start_time,
-                    end_time=end_time,
-                ), infop)
