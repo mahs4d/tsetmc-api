@@ -127,9 +127,9 @@ class SymbolDayDetails:
 
     def _get_cache_minor(self, is_raw: bool = False):
         if is_raw:
-            return f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}'
+            return f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}.raw'
         else:
-            return f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}-raw'
+            return f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}'
 
     def get_final_major_shareholders(self) -> List[SymbolMajorShareholder]:
         """

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import List, Dict, Iterator
+from typing import List, Dict, Iterator, Optional
 
 from tsetmc_api.types import Price
 from tsetmc_api.utils import get_timestamp
@@ -56,7 +56,7 @@ class Snapshot:
         )
 
     @staticmethod
-    def from_raw_day_details(date: date, price_data: Dict, orders_data: List[Dict]) -> Snapshot:
+    def from_raw_day_details(date: date, price_data: Dict, orders_data: List[Optional[Dict]]) -> Snapshot:
         max_t = price_data['t']
         snapshot = Snapshot(
             time=get_timestamp(date, max_t),
@@ -97,12 +97,13 @@ class Snapshot:
     @staticmethod
     def generate_snapshots_from_raw_day_detail_data(date: date, price_data: List[Dict], orders_data: List[Dict]) -> \
             Iterator[Snapshot]:
+        MAX_ORDERS_COUNT = 5
         max_pdi = len(price_data)
         max_odi = len(orders_data)
         pdi = 0
         odi = -1
         last_price_data = price_data[pdi]
-        last_orders_data = [None, None, None]
+        last_orders_data = [None] * MAX_ORDERS_COUNT
 
         while True:
             phase = -1
@@ -129,13 +130,13 @@ class Snapshot:
             # step orders
             if phase == 2 or phase == 3:
                 t = orders_data[odi + 1]['t']
-                orders_found = [None, None, None]
+                orders_found = [None] * MAX_ORDERS_COUNT
                 while True:
                     if odi + 1 >= max_odi:
                         break
 
                     order = orders_data[odi + 1]
-                    rank = min(order['rank'] - 1, 2)
+                    rank = min(order['rank'] - 1, MAX_ORDERS_COUNT - 1)
                     if orders_found[rank] is not None or order['t'] > t:
                         break
 

@@ -14,7 +14,7 @@ def generate(symbol_id: SymbolId, start_time: jdatetime, end_time: jdatetime):
                                       end_time=end_time,
                                       file_location=file_name)
 
-
+generate('35425587644337450', jdatetime(1399, 9,3), jdatetime(1399, 9, 7))
 def install(file_location: str):
     SymbolDataFile.install_data_file(file_location)
 
