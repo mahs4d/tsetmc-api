@@ -1,6 +1,8 @@
 # Editor files
 *.swp
 .vscode
+.ipynp_*
+ .idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
