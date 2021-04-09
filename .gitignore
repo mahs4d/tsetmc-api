@@ -2,7 +2,7 @@
 *.swp
 .vscode
 .ipynp_*
- .idea
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
