@@ -1,11 +1,12 @@
 from enum import Enum
 
 from pydantic import BaseModel
+from pydantic.utils import deep_update
 
 from . import _core
 
 
-class MapTickRow(BaseModel):
+class MapData(BaseModel):
     symbol_id: str
     symbol_short_name: str
     symbol_long_name: str
@@ -29,30 +30,37 @@ class MapType(Enum):
 
 
 class MarketMap:
-    def get_market_map_tick(self, map_type: MapType = MapType.MARKET_VALUE) -> list[MapTickRow]:
+    def __init__(self):
+        self._heven = 0
+
+        self._last_map_data = {}
+
+    def get_market_map_data(self, map_type: MapType = MapType.MARKET_VALUE) -> dict[str, MapData]:
         """
         returns symbol data in market map (in "naghshe bazar" page)
         !!! webserver occasionally throws 403 error, you should retry in a few seconds when this happens
         """
 
-        raw_data = _core.get_market_map_data(map_type=map_type.value)
+        raw_data, new_heven = _core.get_market_map_data(map_type=map_type.value, heven=self._heven)
 
-        rows = [MapTickRow(
-            symbol_id=row['symbol_id'],
-            symbol_short_name=row['symbol_short_name'],
-            symbol_long_name=row['symbol_long_name'],
+        self._last_map_data = deep_update(self._last_map_data, raw_data)
 
-            close=row['close'],
-            last=row['last'],
-            volume=row['volume'],
-            value=row['value'],
-            count=row['count'],
+        map_data = {key: MapData(
+            symbol_id=data['symbol_id'],
+            symbol_short_name=data['symbol_short_name'],
+            symbol_long_name=data['symbol_long_name'],
 
-            group_name=row['group_name'],
+            close=data['close'],
+            last=data['last'],
+            volume=data['volume'],
+            value=data['value'],
+            count=data['count'],
 
-            color=row['color'],
-            price_change_percent=row['price_change_percent'],
-            percent=row['percent'],
-        ) for row in raw_data]
+            group_name=data['group_name'],
 
-        return rows
+            color=data['color'],
+            price_change_percent=data['price_change_percent'],
+            percent=data['percent'],
+        ) for key, data in raw_data.items()}
+
+        return map_data
