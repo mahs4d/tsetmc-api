@@ -1,37 +1,10 @@
-from pydantic import BaseModel
 from pydantic.utils import deep_update
 
 from . import _core
-from .daily_history import WatchDailyHistoryTick
+from .daily_history import WatchDailyHistoryDataRow
 from .orderbook import WatchOrderBook, WatchOrderBookRow
-from .traders_type import WatchTradersTypeData, WatchTradersTypeRow, WatchTradersTypeSubData
-
-
-class WatchPriceData(BaseModel):
-    symbol_id: str
-    isin: str
-    short_name: str
-    full_name: str
-    heven: int
-    open: int
-    close: int
-    last: int
-    count: int
-    volume: int
-    value: int
-    low: int
-    high: int
-    yesterday: int
-    eps: int
-    base_volume: int
-    visit_count: int
-    flow: int
-    group: int
-    range_max: int
-    range_min: int
-    z: int
-    yval: int
-    orderbook: WatchOrderBook
+from .price import WatchPriceDataRow
+from .traders_type import WatchTradersTypeDataRow, WatchTradersTypeInfo, WatchTradersTypeSubInfo
 
 
 class MarketWatch:
@@ -40,7 +13,7 @@ class MarketWatch:
         self._refid = 0
         self._last_price_data = {}
 
-    def get_price_data(self) -> dict[str, WatchPriceData]:
+    def get_price_data(self) -> dict[str, WatchPriceDataRow]:
         """
         gets basic price information (in "didbane bazar" page)
         """
@@ -53,7 +26,7 @@ class MarketWatch:
         for symbol_id in self._last_price_data.keys():
             data = self._last_price_data[symbol_id]
 
-            watch_data[symbol_id] = WatchPriceData(
+            watch_data[symbol_id] = WatchPriceDataRow(
                 symbol_id=data['symbol_id'],
                 isin=data['isin'],
                 short_name=data['short_name'],
@@ -96,30 +69,30 @@ class MarketWatch:
 
         return watch_data
 
-    def get_traders_type_data(self) -> dict[str, WatchTradersTypeData]:
+    def get_traders_type_data(self) -> dict[str, WatchTradersTypeDataRow]:
         """
         gets traders type data (in "didebane bazar" page)
         """
 
         raw_data = _core.get_watch_traders_type_data()
 
-        watch_data = {key: WatchTradersTypeRow(
-            legal=WatchTradersTypeData(
-                buy=WatchTradersTypeSubData(
+        watch_data = {key: WatchTradersTypeDataRow(
+            legal=WatchTradersTypeInfo(
+                buy=WatchTradersTypeSubInfo(
                     count=data['legal']['buy']['count'],
                     volume=data['legal']['buy']['volume'],
                 ),
-                sell=WatchTradersTypeSubData(
+                sell=WatchTradersTypeInfo(
                     count=data['legal']['sell']['count'],
                     volume=data['legal']['sell']['volume'],
                 ),
             ),
-            real=WatchTradersTypeData(
-                buy=WatchTradersTypeSubData(
+            real=WatchTradersTypeInfo(
+                buy=WatchTradersTypeInfo(
                     count=data['real']['buy']['count'],
                     volume=data['real']['buy']['volume'],
                 ),
-                sell=WatchTradersTypeSubData(
+                sell=WatchTradersTypeInfo(
                     count=data['real']['sell']['count'],
                     volume=data['real']['sell']['volume'],
                 ),
@@ -128,7 +101,7 @@ class MarketWatch:
 
         return watch_data
 
-    def get_daily_ticks_history(self) -> dict[str, list[WatchDailyHistoryTick]]:
+    def get_daily_history_data(self) -> dict[str, list[WatchDailyHistoryDataRow]]:
         """
         gets 30 day history of symbols (in "didbane bazar" page)
         """
@@ -137,7 +110,7 @@ class MarketWatch:
 
         watch_data = {}
         for symbol_id in raw_data.keys():
-            watch_data[symbol_id] = [WatchDailyHistoryTick(
+            watch_data[symbol_id] = [WatchDailyHistoryDataRow(
                 open=row['open'],
                 close=row['close'],
                 last=row['last'],

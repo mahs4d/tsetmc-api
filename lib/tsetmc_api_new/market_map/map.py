@@ -6,7 +6,7 @@ from pydantic.utils import deep_update
 from . import _core
 
 
-class MapData(BaseModel):
+class MapDataRow(BaseModel):
     symbol_id: str
     symbol_short_name: str
     symbol_long_name: str
@@ -35,7 +35,7 @@ class MarketMap:
 
         self._last_map_data = {}
 
-    def get_market_map_data(self, map_type: MapType = MapType.MARKET_VALUE) -> dict[str, MapData]:
+    def get_market_map_data(self, map_type: MapType = MapType.MARKET_VALUE) -> dict[str, MapDataRow]:
         """
         returns symbol data in market map (in "naghshe bazar" page)
         !!! webserver occasionally throws 403 error, you should retry in a few seconds when this happens
@@ -45,7 +45,7 @@ class MarketMap:
 
         self._last_map_data = deep_update(self._last_map_data, raw_data)
 
-        map_data = {key: MapData(
+        map_data = {key: MapDataRow(
             symbol_id=data['symbol_id'],
             symbol_short_name=data['symbol_short_name'],
             symbol_long_name=data['symbol_long_name'],

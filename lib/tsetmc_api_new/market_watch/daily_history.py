@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 
 
-
-class WatchDailyHistoryTick(BaseModel):
+class WatchDailyHistoryDataRow(BaseModel):
     open: int
     close: int
     last: int
@@ -12,4 +11,3 @@ class WatchDailyHistoryTick(BaseModel):
     low: int
     high: int
     yesterday: int
-

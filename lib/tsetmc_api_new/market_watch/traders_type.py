@@ -1,16 +1,16 @@
 from pydantic import BaseModel
 
 
-class WatchTradersTypeSubData(BaseModel):
+class WatchTradersTypeSubInfo(BaseModel):
     count: int
     volume: int
 
 
-class WatchTradersTypeData(BaseModel):
-    buy: WatchTradersTypeSubData
-    sell: WatchTradersTypeSubData
+class WatchTradersTypeInfo(BaseModel):
+    buy: WatchTradersTypeSubInfo
+    sell: WatchTradersTypeSubInfo
 
 
-class WatchTradersTypeRow(BaseModel):
-    legal: WatchTradersTypeData
-    real: WatchTradersTypeData
+class WatchTradersTypeDataRow(BaseModel):
+    legal: WatchTradersTypeInfo
+    real: WatchTradersTypeInfo

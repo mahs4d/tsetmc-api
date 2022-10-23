@@ -1,12 +1,15 @@
-from tsetmc_api_new.market_map import map
-from tsetmc_api_new.market_map.map import MapType
-from tsetmc_api_new.symbol.symbol import Symbol
+from jdatetime import date as jdate
 
-m = map.MarketMap()
-print(m.get_market_map_tick(map_type=MapType.MARKET_VOLUME))
+from tsetmc_api_new.day_details import DayDetails
 
-# symbol = Symbol(symbol_id='46348559193224090')
-#
-# price_overview = symbol.get_traders_type_history()
-#
-# print(price_overview[0])
+SYMBOL_ID = '3839324986781871'
+DATE = jdate(1401, 7, 25)
+
+details = DayDetails(symbol_id=SYMBOL_ID, date=DATE)
+
+# output1 = details.get_price_overview()
+# output2 = details.get_price_data()
+# output3 = details.get_orderbook_data()
+# output4 = details.get_trade_data()
+output5 = details.get_traders_type_data()
+print(output5)

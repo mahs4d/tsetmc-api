@@ -1,55 +1,14 @@
-from jdatetime import time as jtime
-from pydantic import BaseModel
-
 from . import _core
 from .group import GroupDataRow
+from .identification import SymbolIdDetails
 from .notification import Notification
 from .orderbook import OrderBook, OrderBookRow
+from .price import SymbolPriceOverview, SymbolIntraDayPriceChartTick
 from .shareholder import SymbolShareHolderRow, ShareHolder
 from .state_change import StateChange
 from .supervisor_message import SupervisorMessage
 from .tick import Tick, DailyTick
 from .traders_type import TradersTypeRow, TradersTypeData, TradersTypeSubData
-
-
-class SymbolIdDetails(BaseModel):
-    isin: str
-    short_isin: str
-    short_name: str
-    long_name: str
-    english_name: str
-
-    company_isin: str
-    company_short_isin: str
-    company_name: str
-
-    market_code: str
-    market_name: str
-
-    group_code: str
-    group_name: str
-
-    subgroup_code: str
-    subgroup_name: str
-
-
-class SymbolPriceOverview(BaseModel):
-    tick: Tick
-    orderbook: OrderBook
-    traders_type: TradersTypeRow
-    group_data: list[GroupDataRow]
-
-
-class SymbolIntraDayPriceChartTick(BaseModel):
-    time: jtime
-    high: int
-    low: int
-    open: int
-    close: int
-    volume: int
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class Symbol:

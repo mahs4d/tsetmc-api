@@ -37,4 +37,3 @@ def get_market_map_data(map_type: int, heven: int = 0) -> tuple[dict[dict], int]
         }
 
     return watch_data, min_heven
-
