@@ -42,4 +42,4 @@ Tsetmc sometimes returns 403 and you should retry.
 
 # Support and Donation
 If this repository helped you, please support it by giving a star (:star:).
-For donation please contact me at [mahdi74sadeghi@gmail.com](mailto://mahdi74sadeghi@gmail.com).
+For donation please contact me at [mahdi74sadeghi@gmail.com](mailto:mahdi74sadeghi@gmail.com).
