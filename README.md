@@ -10,19 +10,19 @@ This library is for getting data from [tsetmc](http://tsetmc.com) website. It is
 
 ## Symbol Component (tsetmc_api.symbol)
 
-![Symbol Component](/docs/images/Symbol.drawio)
+![Symbol Component](/docs/images/Symbol.png)
 
 ## Market Watch Component (tsetmc_api.market_watch)
 
-![Market Watch Component](/docs/images/MarketWatch.drawio)
+![Market Watch Component](/docs/images/MarketWatch.png)
 
 ## Day Details Component (tsetmc_api.day_details)
 
-![Day Details Component](/docs/images/DayDetails.drawio)
+![Day Details Component](/docs/images/DayDetails.png)
 
 ## Market Map Component (tsetmc_api.market_map)
 
-![Market Map Component](/docs/images/MarketMap.drawio)
+![Market Map Component](/docs/images/MarketMap.png)
 
 ## Group Component (tsetmc_api.group)
 
