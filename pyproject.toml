@@ -8,6 +8,7 @@ authors = ["Mahdi Sadeghi <mahdi74sadeghi@gmail.com>"]
 packages = [
     { include = "tsetmc_api", from = "lib" },
 ]
+readme = "README.md"
 keywords = ["tsetmc", "stocks", "tehran stock exchange"]
 
 [tool.poetry.dependencies]

@@ -18,19 +18,19 @@ You can install this library using the following command:
 
 ### Symbol Component (tsetmc_api.symbol)
 
-![Symbol Component](/docs/images/Symbol.png)
+![Symbol Component](https://github.com/mahs4d/tsetmc-api/blob/master/docs/images/Symbol.png?raw=true)
 
 ### Market Watch Component (tsetmc_api.market_watch)
 
-![Market Watch Component](/docs/images/MarketWatch.png)
+![Market Watch Component](https://github.com/mahs4d/tsetmc-api/blob/master/docs/images/MarketWatch.png?raw=true)
 
 ### Day Details Component (tsetmc_api.day_details)
 
-![Day Details Component](/docs/images/DayDetails.png)
+![Day Details Component](https://github.com/mahs4d/tsetmc-api/blob/master/docs/images/DayDetails.png?raw=true)
 
 ### Market Map Component (tsetmc_api.market_map)
 
-![Market Map Component](/docs/images/MarketMap.png)
+![Market Map Component](https://github.com/mahs4d/tsetmc-api/blob/master/docs/images/MarketMap.png?raw=true)
 
 ### Group Component (tsetmc_api.group)
 
@@ -40,6 +40,6 @@ Group component currently only has one function (`get_all_groups`) which returns
 
 Tsetmc sometimes returns 403 and you should retry.
 
-# Support and Donation
+## Support and Donation
 If this repository helped you, please support it by giving a star (:star:).
 For donation please contact me at [mahdi74sadeghi@gmail.com](mailto:mahdi74sadeghi@gmail.com).
