@@ -1,36 +1,45 @@
-# TSETMC Api
+# TSETMC-API
 
-یک کتابخانه که فعلا این کارها رو میتونه انجام بده:
+This library is for getting data from [tsetmc](http://tsetmc.com) website. It is divided into 5 subcomponents:
 
-- دیده‌بان بازار و فیلترنویسی (با دسترسی به تموم بخش‌هایی که در فیلترنویسی معمولی به اونها دسترسی دارید)
-- سابقه‌ی یک سهم
-- جزئیات یک روز خاص
-- سهامداران عمده و همچنین تاریخچه‌ی اونها (همون نموداره که وقتی روشون کلیک میکنی نشون میده)
-- بخش شناسه‌ی یک سهم
-- تاریخچه‌ی حقیقی حقوقی یک سهم
+## Installation
 
-و بخش‌هایی که هنوز کامل نشده:
+You can install this library using the following command:
 
-- صفحه‌ی اصلی خود سهم (قیمت الان سهم چقدره)
-- لیست تمام نماد‌ها (اینو من صفحه‌ای رو پیدا نکردم که همه رو (چه بورس چه فرابورس) رو لیست کرده باشه)
+`pip install tsetmc-api`
 
-## نحوه‌ی نصب
+## Usage
 
-```shell script
-pip3 install tsetmc-api
-```
+- **symbol:** working with main symbol page and live data (e.g. [this page](http://www.tsetmc.com/loader.aspx?ParTree=151311&i=43362635835198978))
+- **market_watch:** getting data visible from [market watch page](http://www.tsetmc.com/Loader.aspx?ParTree=15131F)
+- **day_details:** working with details of a symbol in a single day of history (e.g. [this page](http://cdn.tsetmc.com/History/43362635835198978/20221029))
+- **market_map:** getting data visible in [market map page](http://main.tsetmc.com/marketmap)
+- **group:** getting list of available symbol groups
 
-## مثال‌ها
+### Symbol Component (tsetmc_api.symbol)
 
-| فایل مثال | توضیح |
-|-----------|-------|
-| examples/watch.py | کار با دیده‌بان و فیلترنویسی |
+![Symbol Component](/docs/images/Symbol.png)
 
-## کمک به توسعه
+### Market Watch Component (tsetmc_api.market_watch)
 
-برای کمک در توسعه چندتا کار میتونید انجام بدید:
+![Market Watch Component](/docs/images/MarketWatch.png)
 
-- نوشتن داکیومنت
-- پیشنهاد برای اضافه کردن یک قابلیت خاص با ایجاد issue
-- پیاده‌سازی یک قابلیت جدید یا بهبود قابلیت‌های قبلی و ایجاد یک pull request
-- معرفی کردن یک راه حل برای پیاده‌سازی فیچرهای جدید
+### Day Details Component (tsetmc_api.day_details)
+
+![Day Details Component](/docs/images/DayDetails.png)
+
+### Market Map Component (tsetmc_api.market_map)
+
+![Market Map Component](/docs/images/MarketMap.png)
+
+### Group Component (tsetmc_api.group)
+
+Group component currently only has one function (`get_all_groups`) which returns all the symbol groups.
+
+### Errors
+
+Tsetmc sometimes returns 403 and you should retry.
+
+# Support and Donation
+If this repository helped you, please support it by giving a star (:star:).
+For donation please contact me at [mahdi74sadeghi@gmail.com](mailto:mahdi74sadeghi@gmail.com).

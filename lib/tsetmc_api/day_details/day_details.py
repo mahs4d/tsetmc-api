@@ -1,229 +1,152 @@
-from datetime import timedelta, datetime
-from typing import List, Optional, Dict
+from jdatetime import date as jdate
 
-from jdatetime import date, time
-
-from tsetmc_api.cache import PersistentCache
-from tsetmc_api.shareholder import SymbolMajorShareholder
-from tsetmc_api.utils import get_timezone
-from . import core as day_details_core
-from .exceptions import NoDataError
-from .snapshot import Snapshot
-from .trade import Trade
+from . import _core
+from .orderbook import DayDetailsOrderBookDataRow, DayDetailsOrderBookRow
+from .price import DayDetailsPriceDataRow, DayDetailsPriceOverview
+from .shareholder import DayDetailsShareHolderDataRow, DayDetailsShareHolder
+from .threshold import DayDetailsThresholdsData
+from .trade import DayDetailsTradeDataRow
+from .traders_type import DayDetailsTradersTypeData, DayDetailsTradersTypeInfo, DayDetailsTradersTypeSubInfo
 
 
-class SymbolDayDetails:
-    def __init__(self, symbol, jyear: int, jmonth: int, jday: int,
-                 load_from_cache: bool = True, save_to_cache: bool = True, save_raw_data: bool = False):
-        self.symbol = symbol
-        self.date = date(year=jyear, month=jmonth, day=jday)
-        self.greg_date = self.date.togregorian()
-        self.load_from_cache = load_from_cache
-        self.save_to_cache = save_to_cache
-        self.save_raw_data = save_raw_data
+class DayDetails:
+    def __init__(self, symbol_id: str, date: jdate):
+        self.symbol_id = symbol_id
+        self.date = date
 
-        self._is_no_data = False
+    def get_price_overview(self) -> DayDetailsPriceOverview:
+        """
+        returns an overview of price information for that day
+        """
 
-        self._load()
+        raw_data = _core.get_day_details_price_overview(symbol_id=self.symbol_id, date=self.date)
 
-    def _load(self):
-        if self._load_from_cache():
-            return
-
-        self._load_from_tsetmc()
-
-    def _load_from_cache(self) -> bool:
-        if not self.load_from_cache:
-            return False
-
-        if PersistentCache.exists('symbol_day_details', self._get_cache_minor(is_raw=False)):
-            f = PersistentCache.fetch('symbol_day_details', self._get_cache_minor(is_raw=False))
-
-            if 'no_data' in f:
-                self._is_no_data = True
-                raise NoDataError('there is no data for this symbol in the specified date')
-
-            self._final_shareholders = f['final_shareholders']
-            self._initial_shareholders = f['initial_shareholders']
-            self._trades = f['trades']
-            self._snapshots = f['snapshots']
-            print('loaded from cache')
-            return True
-        elif PersistentCache.exists('symbol_day_details', self._get_cache_minor(is_raw=True)):
-            f = PersistentCache.fetch('symbol_day_details', self._get_cache_minor(is_raw=True))
-
-            if 'no_data' in f:
-                self._is_no_data = True
-                raise NoDataError('there is no data for this symbol in the specified date')
-
-            self._load_from_raw_data(**f)
-            return True
-
-        return False
-
-    def _load_from_tsetmc(self):
-        mdate = self.date.togregorian()
-        try:
-            data = day_details_core.load_intraday_data(self.symbol.id, mdate.year, mdate.month, mdate.day)
-        except NoDataError as ex:
-            self._is_no_data = True
-            self._save_to_cache()
-            raise ex
-
-        company_isin = self.symbol.get_details()['company_isin']
-
-        self._load_from_raw_data(company_isin=company_isin, raw_data=data)
-
-        self._save_to_cache(is_raw=self.save_raw_data, raw_data={
-            'company_isin': company_isin,
-            'raw_data': data,
-        })
-
-    def _load_from_raw_data(self, company_isin: str, raw_data: Dict):
-        self._final_shareholders = []
-        for shdata in raw_data['shareholders']:
-            self._final_shareholders.append(SymbolMajorShareholder(self.symbol.id,
-                                                                   company_isin=company_isin,
-                                                                   holder_name=shdata['name'],
-                                                                   holder_id=shdata['id'],
-                                                                   percentage=shdata['percentage'],
-                                                                   shares_count=shdata['shares_count']))
-
-        self._initial_shareholders = []
-        for shdata in raw_data['previous_shareholders']:
-            self._initial_shareholders.append(SymbolMajorShareholder(self.symbol.id,
-                                                                     company_isin=company_isin,
-                                                                     holder_name=shdata['name'],
-                                                                     holder_id=shdata['id'],
-                                                                     percentage=shdata['percentage'],
-                                                                     shares_count=shdata['shares_count']))
-
-        self._trades = Trade.from_raw_trades_data(raw_data['trades'])
-
-        self._snapshots = list(
-            Snapshot.generate_snapshots_from_raw_day_detail_data(self.greg_date,
-                                                                 raw_data['price_data'],
-                                                                 raw_data['orders_data'])
+        return DayDetailsPriceOverview(
+            price_change=raw_data['price_change'],
+            low=raw_data['low'],
+            high=raw_data['high'],
+            yesterday=raw_data['yesterday'],
+            open=raw_data['open'],
+            close=raw_data['close'],
+            last=raw_data['last'],
+            count=raw_data['count'],
+            volume=raw_data['volume'],
+            value=raw_data['value'],
         )
 
-    def _save_to_cache(self, is_raw: bool = False, raw_data: Optional[Dict] = None):
-        if not self.save_to_cache:
-            return
-
-        if self._is_no_data:
-            PersistentCache.store('symbol_day_details', self._get_cache_minor(is_raw=is_raw), {
-                'no_data': True,
-            })
-            return
-
-        if is_raw:
-            PersistentCache.store('symbol_day_details', self._get_cache_minor(is_raw=True), raw_data)
-        else:
-            PersistentCache.store('symbol_day_details', self._get_cache_minor(is_raw=False), {
-                'final_shareholders': self._final_shareholders,
-                'initial_shareholders': self._initial_shareholders,
-                'trades': self._trades,
-                'snapshots': self._snapshots,
-            })
-
-    def _get_cache_minor(self, is_raw: bool = False):
-        if is_raw:
-            return f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}.raw'
-        else:
-            return f'{self.symbol.id}-{self.date.year}-{self.date.month}-{self.date.day}'
-
-    def get_final_major_shareholders(self) -> List[SymbolMajorShareholder]:
+    def get_price_data(self) -> list[DayDetailsPriceDataRow]:
         """
-        سهامداران عمده در پایان روز
+        returns instant prices (for each time in that date)
         """
-        if self._is_no_data:
-            return []
 
-        return self._final_shareholders
+        raw_data = _core.get_day_details_price_data(symbol_id=self.symbol_id, date=self.date)
 
-    def get_initial_major_shareholders(self) -> List[SymbolMajorShareholder]:
+        return [DayDetailsPriceDataRow(
+            time=row['time'],
+            close=row['close'],
+            last=row['last'],
+            value=row['value'],
+            volume=row['volume'],
+            count=row['count'],
+        ) for row in raw_data]
+
+    def get_orderbook_data(self) -> list[DayDetailsOrderBookDataRow]:
         """
-        سهامداران عمده در ابتدای روز
+        returns instant orderbooks (for each time in that date)
         """
-        if self._is_no_data:
-            return []
 
-        return self._initial_shareholders
+        raw_data = _core.get_day_details_orderbook_data(symbol_id=self.symbol_id, date=self.date)
 
-    def get_trades(self) -> List[Trade]:
+        return [DayDetailsOrderBookDataRow(
+            time=data['time'],
+            buy_rows=[DayDetailsOrderBookRow(
+                time=row['time'],
+                count=row['count'],
+                price=row['price'],
+                volume=row['volume'],
+            ) for row in data['buy_rows']],
+            sell_rows=[DayDetailsOrderBookRow(
+                time=row['time'],
+                count=row['count'],
+                price=row['price'],
+                volume=row['volume'],
+            ) for row in data['sell_rows']],
+        ) for data in raw_data]
+
+    def get_traders_type_data(self) -> DayDetailsTradersTypeData:
         """
-        معاملات
+        returns traders type information for that day
         """
-        if self._is_no_data:
-            return []
 
-        return self._trades
+        raw_data = _core.get_day_details_traders_type_data(symbol_id=self.symbol_id, date=self.date)
 
-    def get_snapshots(self) -> List[Snapshot]:
+        return DayDetailsTradersTypeData(
+            legal=DayDetailsTradersTypeInfo(
+                buy=DayDetailsTradersTypeSubInfo(
+                    count=raw_data['legal']['buy']['count'],
+                    volume=raw_data['legal']['buy']['volume'],
+                    value=raw_data['legal']['buy']['value'],
+                ),
+                sell=DayDetailsTradersTypeSubInfo(
+                    count=raw_data['legal']['sell']['count'],
+                    volume=raw_data['legal']['sell']['volume'],
+                    value=raw_data['legal']['sell']['value'],
+                ),
+            ),
+            real=DayDetailsTradersTypeInfo(
+                buy=DayDetailsTradersTypeSubInfo(
+                    count=raw_data['real']['buy']['count'],
+                    volume=raw_data['real']['buy']['volume'],
+                    value=raw_data['real']['buy']['value'],
+                ),
+                sell=DayDetailsTradersTypeSubInfo(
+                    count=raw_data['real']['sell']['count'],
+                    volume=raw_data['real']['sell']['volume'],
+                    value=raw_data['real']['sell']['value'],
+                ),
+            ),
+        )
+
+    def get_trades_data(self, summarize: bool = False) -> list[DayDetailsTradeDataRow]:
         """
-        تمام لحظات سهم در طور روز
+        gets all trade data
         """
-        if self._is_no_data:
-            return []
 
-        return self._snapshots
+        raw_data = _core.get_day_details_trade_data(symbol_id=self.symbol_id, date=self.date, summarize=summarize)
 
-    def get_snapshots_by_time(self, hour: int, minute: int, second: int) -> List[Snapshot]:
+        return [DayDetailsTradeDataRow(
+            time=row['time'],
+            price=row['price'],
+            volume=row['volume'],
+        ) for row in raw_data]
+
+    def get_thresholds_data(self) -> DayDetailsThresholdsData:
+        raw_data = _core.get_day_details_thresholds_data(symbol_id=self.symbol_id, date=self.date)
+        return DayDetailsThresholdsData(
+            range_max=raw_data['max'],
+            range_min=raw_data['min'],
+        )
+
+    def get_shareholders_data(self) -> tuple[list[DayDetailsShareHolderDataRow], list[DayDetailsShareHolderDataRow]]:
         """
-        وضعیت سهم در زمان خاصی از روز
+        gets list of shareholders before and after the day
         """
-        if self._is_no_data:
-            return []
 
-        snapshots = []
-        t = int(datetime(year=self.greg_date.year, month=self.greg_date.month, day=self.greg_date.day,
-                         hour=hour, minute=minute, second=second, tzinfo=get_timezone()).timestamp())
-        last_snapshot = None
-        for snapshot in self._snapshots:
-            if snapshot.time > t:
-                if not snapshots:
-                    return [last_snapshot]
+        raw_old_shareholders, raw_new_shareholders = _core.get_day_details_shareholders_data(
+            symbol_id=self.symbol_id,
+            date=self.date,
+        )
 
-                return snapshots
+        old_shareholders = [DayDetailsShareHolderDataRow(
+            shareholder=DayDetailsShareHolder(id=row['id'], name=row['name']),
+            count=row['count'],
+            percentage=row['percentage'],
+        ) for row in raw_old_shareholders]
 
-            if snapshot.time == t:
-                snapshots.append(snapshot)
+        new_shareholders = [DayDetailsShareHolderDataRow(
+            shareholder=DayDetailsShareHolder(id=row['id'], name=row['name']),
+            count=row['count'],
+            percentage=row['percentage'],
+        ) for row in raw_new_shareholders]
 
-            last_snapshot = snapshot
-
-        if not snapshots:
-            return [last_snapshot]
-
-        return snapshots
-
-    def get_snapshots_by_rate(self, from_time: time, to_time: time, delta: timedelta) -> List[Snapshot]:
-        """
-        وضعیت سهم در لحظات مختلف روز در بازه‌هایی با طول pick_rate
-        """
-        if self._is_no_data:
-            return []
-
-        ret = []
-        start_datetime = datetime(year=self.greg_date.year, month=self.greg_date.month, day=self.greg_date.day,
-                                  hour=from_time.hour, minute=from_time.minute, second=from_time.second,
-                                  tzinfo=get_timezone())
-        end_timestamp = int(datetime(year=self.greg_date.year, month=self.greg_date.month, day=self.greg_date.day,
-                                     hour=to_time.hour, minute=to_time.minute, second=to_time.second,
-                                     tzinfo=get_timezone()).timestamp())
-        next_pick_datetime = start_datetime
-        next_pick_timestamp = int(start_datetime.timestamp())
-        last_snapshot = None
-        for snapshot in self.get_snapshots():
-            if snapshot.time > next_pick_timestamp:
-                if last_snapshot:
-                    snapshot_copy = last_snapshot.copy()
-                    snapshot_copy.time = next_pick_timestamp
-                    ret.append(snapshot_copy)
-                    next_pick_datetime += delta
-                    next_pick_timestamp = int(next_pick_datetime.timestamp())
-
-            last_snapshot = snapshot
-            if next_pick_timestamp > end_timestamp:
-                break
-
-        return ret
+        return old_shareholders, new_shareholders
