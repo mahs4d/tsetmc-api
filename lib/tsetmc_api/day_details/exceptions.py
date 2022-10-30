@@ -1,2 +1,0 @@
-class NoDataError(Exception):
-    pass

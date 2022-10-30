@@ -1,29 +1,35 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Union, Dict
+from enum import Enum
 
-from . import core as group_core
+from pydantic import BaseModel
 
-GroupId = str
+from . import _core
 
 
-@dataclass
-class SymbolGroup:
-    code: GroupId
+class GroupType(Enum):
+    PAPER = 'PAPER'
+    INDUSTRIAL = 'INDUSTRIAL'
+
+
+class Group(BaseModel):
+    id: int
+    code: int
     name: str
+    description: str
+    type: GroupType
 
     @staticmethod
-    def get_all_groups() -> List[SymbolGroup]:
-        raw_groups = group_core.get_all_groups()
-        return SymbolGroup.from_dict(raw_groups)
+    def get_all_groups() -> list[Group]:
+        """
+        returns list of symbol groups
+        """
 
-    @staticmethod
-    def from_dict(dictionary: Union[Dict, List]) -> Union[SymbolGroup, List[SymbolGroup]]:
-        if type(dictionary) == list:
-            return [SymbolGroup.from_dict(d) for d in dictionary]
-
-        return SymbolGroup(
-            code=dictionary.get('code'),
-            name=dictionary.get('name'),
-        )
+        raw_data = _core.get_group_static_data()
+        return [Group(
+            id=row['id'],
+            code=row['code'],
+            name=row['name'],
+            description=row['description'],
+            type=GroupType.PAPER if row['type'] == 'PaperType' else GroupType.INDUSTRIAL,
+        ) for row in raw_data]

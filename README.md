@@ -1,36 +1,33 @@
-# TSETMC Api
+# TSETMC-API
 
-یک کتابخانه که فعلا این کارها رو میتونه انجام بده:
+This library is for getting data from [tsetmc](http://tsetmc.com) website. It is divided into 5 subcomponents:
 
-- دیده‌بان بازار و فیلترنویسی (با دسترسی به تموم بخش‌هایی که در فیلترنویسی معمولی به اونها دسترسی دارید)
-- سابقه‌ی یک سهم
-- جزئیات یک روز خاص
-- سهامداران عمده و همچنین تاریخچه‌ی اونها (همون نموداره که وقتی روشون کلیک میکنی نشون میده)
-- بخش شناسه‌ی یک سهم
-- تاریخچه‌ی حقیقی حقوقی یک سهم
+- **symbol:** working with main symbol page and live data (e.g. [this page](http://www.tsetmc.com/loader.aspx?ParTree=151311&i=43362635835198978))
+- **market_watch:** getting data visible from [market watch page](http://www.tsetmc.com/Loader.aspx?ParTree=15131F)
+- **day_details:** working with details of a symbol in a single day of history (e.g. [this page](http://cdn.tsetmc.com/History/43362635835198978/20221029))
+- **market_map:** getting data visible in [market map page](http://main.tsetmc.com/marketmap)
+- **group:** getting list of available symbol groups
 
-و بخش‌هایی که هنوز کامل نشده:
+## Symbol Component (tsetmc_api.symbol)
 
-- صفحه‌ی اصلی خود سهم (قیمت الان سهم چقدره)
-- لیست تمام نماد‌ها (اینو من صفحه‌ای رو پیدا نکردم که همه رو (چه بورس چه فرابورس) رو لیست کرده باشه)
+![Symbol Component](/docs/images/Symbol.drawio)
 
-## نحوه‌ی نصب
+## Market Watch Component (tsetmc_api.market_watch)
 
-```shell script
-pip3 install tsetmc-api
-```
+![Market Watch Component](/docs/images/MarketWatch.drawio)
 
-## مثال‌ها
+## Day Details Component (tsetmc_api.day_details)
 
-| فایل مثال | توضیح |
-|-----------|-------|
-| examples/watch.py | کار با دیده‌بان و فیلترنویسی |
+![Day Details Component](/docs/images/DayDetails.drawio)
 
-## کمک به توسعه
+## Market Map Component (tsetmc_api.market_map)
 
-برای کمک در توسعه چندتا کار میتونید انجام بدید:
+![Market Map Component](/docs/images/MarketMap.drawio)
 
-- نوشتن داکیومنت
-- پیشنهاد برای اضافه کردن یک قابلیت خاص با ایجاد issue
-- پیاده‌سازی یک قابلیت جدید یا بهبود قابلیت‌های قبلی و ایجاد یک pull request
-- معرفی کردن یک راه حل برای پیاده‌سازی فیچرهای جدید
+## Group Component (tsetmc_api.group)
+
+Group component currently only has one function (`get_all_groups`) which returns all the symbol groups.
+
+# Support and Donate
+If this repository helped you can support it by giving a :star: and donating using one of the following links:
+

@@ -1,1 +1,1 @@
-from .group import SymbolGroup
+from .group import Group, GroupType

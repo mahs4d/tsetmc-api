@@ -1,52 +1,34 @@
-from datetime import datetime, time, date
+from copy import deepcopy
 
-from dateutil import tz as timezoneutil
-from jdatetime import timedelta as jtimedelta, datetime as jdatetime
-
-_timezone = timezoneutil.gettz('Asia/Tehran')
+from jdatetime import date as jdate, time as jtime
 
 
-def get_timezone():
-    return _timezone
+def deep_update(d1: dict, d2: dict) -> dict:
+    ret = deepcopy(d1)
+
+    for key, value in d2.items():
+        if key not in d1:
+            ret[key] = value
+        elif type(value) == dict:
+            ret[key] = deep_update(d1=d1[key], d2=value)
+        else:
+            ret[key] = value
+
+    return ret
 
 
-def int_to_time(i: int) -> time:
-    if isinstance(i, str):
-        x = i
+def convert_heven_to_jtime(heven: int) -> jtime:
+    heven = str(heven)
+    if len(heven) == 6:
+        return jtime(hour=int(heven[:2]), minute=int(heven[2:4]), second=int(heven[4:]))
     else:
-        x = str(i)
-
-    if len(x) != 5:
-        h = int(x[:2])
-        m = int(x[2:4])
-        s = int(x[4:])
-    else:
-        h = int(x[:1])
-        m = int(x[1:3])
-        s = int(x[3:])
-
-    return time(hour=h, minute=m, second=s, tzinfo=get_timezone())
+        return jtime(hour=int(heven[:1]), minute=int(heven[1:3]), second=int(heven[3:]))
 
 
-def get_timestamp(date: date, i: int) -> int:
-    if isinstance(i, str):
-        x = i
-    else:
-        x = str(i)
-
-    if len(x) != 5:
-        h = int(x[:2])
-        m = int(x[2:4])
-        s = int(x[4:])
-    else:
-        h = int(x[:1])
-        m = int(x[1:3])
-        s = int(x[3:])
-
-    return int(datetime(year=date.year, month=date.month, day=date.day,
-                        hour=h, minute=m, second=s, tzinfo=get_timezone()).timestamp())
-
-
-def jalali_daterange(start_time: jdatetime, end_time: jdatetime):
-    for n in range(int((end_time - start_time).days)):
-        yield start_time + jtimedelta(n)
+def convert_deven_to_jdate(deven: int) -> jdate:
+    deven = str(deven)
+    return jdate.fromgregorian(
+        year=int(deven[:4]),
+        month=int(deven[4:6]),
+        day=int(deven[6:]),
+    )
