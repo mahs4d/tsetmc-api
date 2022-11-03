@@ -33,6 +33,9 @@ class DayDetailsShareHolderChartRow(BaseModel):
     count: int
     percentage: float
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class DayDetailsShareHolderDataRow(BaseModel):
     symbol_id: str
