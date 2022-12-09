@@ -121,7 +121,7 @@ _STATS_CLIENT_TYPE_INDICES = {
 
 def get_watch_price_data(refid: int = 0, heven: int = 0) -> tuple[dict, int, int]:
     response = requests.get(
-        url='http://members.tsetmc.com/tsev2/data/MarketWatchInit.aspx',
+        url='http://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx',
         params={
             'h': heven,
             'r': refid,
