@@ -12,6 +12,9 @@ def get_day_details_price_overview(symbol_id: str, date: jdate) -> dict:
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDaily/{symbol_id}/{t}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -37,6 +40,9 @@ def get_day_details_price_data(symbol_id: str, date: jdate) -> list[dict]:
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceHistory/{symbol_id}/{t}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -60,6 +66,9 @@ def get_day_details_orderbook_data(symbol_id: str, date: jdate) -> list[dict]:
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/BestLimits/{symbol_id}/{t}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -114,6 +123,9 @@ def get_day_details_trade_data(symbol_id: str, date: jdate, summarize: bool) -> 
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/Trade/GetTradeHistory/{symbol_id}/{t}/{summarize_url_ph}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -132,6 +144,9 @@ def get_day_details_traders_type_data(symbol_id: str, date: jdate) -> dict:
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/ClientType/GetClientTypeHistory/{symbol_id}/{t}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -171,6 +186,9 @@ def get_day_details_thresholds_data(symbol_id: str, date: jdate) -> dict:
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/MarketData/GetStaticThreshold/{symbol_id}/{t}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -188,6 +206,9 @@ def get_day_details_shareholders_data(symbol_id: str, date: jdate) -> tuple[list
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/Shareholder/{symbol_id}/{t}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -199,10 +220,10 @@ def get_day_details_shareholders_data(symbol_id: str, date: jdate) -> tuple[list
     it = int(t)
     for row in response:
         sh_data = {
-            'id': str(row['shareHolderId']),
+            'id': str(row['shareHolderID']),
             'name': row['shareHolderName'],
-            'count': row['numberOfShares'],
-            'percentage': row['perOfShares'],
+            'shares_count': row['numberOfShares'],
+            'shares_percentage': row['perOfShares'],
         }
 
         if row['dEven'] < it:
@@ -217,6 +238,9 @@ def get_shareholder_chart_data(symbol_id: str, shareholder_id: str, days: int) -
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderHistory/{symbol_id}/{shareholder_id}/{days}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -225,8 +249,8 @@ def get_shareholder_chart_data(symbol_id: str, shareholder_id: str, days: int) -
 
     return [{
         'date': convert_deven_to_jdate(deven=row['dEven']),
-        'count': row['numberOfShares'],
-        'percentage': row['perOfShares'],
+        'shares_count': row['numberOfShares'],
+        'shares_percentage': row['perOfShares'],
     } for row in response]
 
 
@@ -234,6 +258,9 @@ def get_shareholder_portfolio(shareholder_id: str) -> list[dict]:
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderCompanyList/{shareholder_id}',
         params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
         verify=False,
         timeout=20,
     )
@@ -241,7 +268,9 @@ def get_shareholder_portfolio(shareholder_id: str) -> list[dict]:
     response = response.json()['shareHolderShare']
 
     return [{
-        'symbol_id': row['insCodes'],
-        'short_name': row['lVal18AFC'],
-        'long_name': row['lVal30'],
+        'symbol_id': row['instrument']['insCode'],
+        'short_name': row['instrument']['lVal18AFC'],
+        'long_name': row['instrument']['lVal30'],
+        'shares_count': row['numberOfShares'],
+        'shares_percent': row['perOfShares'],
     } for row in response]

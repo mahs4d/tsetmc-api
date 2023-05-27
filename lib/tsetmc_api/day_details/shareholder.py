@@ -8,6 +8,8 @@ class DayDetailsShareHolderPortfolioRow(BaseModel):
     symbol_id: str
     short_name: str
     long_name: str
+    shares_count: int
+    shares_percent: float
 
 
 class DayDetailsShareHolder(BaseModel):
@@ -25,13 +27,15 @@ class DayDetailsShareHolder(BaseModel):
             symbol_id=row['symbol_id'],
             short_name=row['short_name'],
             long_name=row['long_name'],
+            shares_count=row['shares_count'],
+            shares_percent=row['shares_percent'],
         ) for row in raw_data]
 
 
 class DayDetailsShareHolderChartRow(BaseModel):
     date: jdate
-    count: int
-    percentage: float
+    shares_count: int
+    shares_percentage: float
 
     class Config:
         arbitrary_types_allowed = True
@@ -41,8 +45,8 @@ class DayDetailsShareHolderDataRow(BaseModel):
     symbol_id: str
     date: jdate
     shareholder: DayDetailsShareHolder
-    count: int
-    percentage: float
+    shares_count: int
+    shares_percentage: float
 
     def get_chart_data(self, days: int = 90) -> list[DayDetailsShareHolderChartRow]:
         """
@@ -57,8 +61,8 @@ class DayDetailsShareHolderDataRow(BaseModel):
 
         return [DayDetailsShareHolderChartRow(
             date=row['date'],
-            count=row['count'],
-            percentage=row['percentage'],
+            shares_count=row['shares_count'],
+            shares_percentage=row['shares_percentage'],
         ) for row in raw_data]
 
     class Config:

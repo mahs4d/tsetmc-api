@@ -1,5 +1,7 @@
+from typing import Any
+
 from jdatetime import date as jdate
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from . import _core
 
@@ -7,14 +9,18 @@ from . import _core
 class SymbolShareHolderPortfolioRow(BaseModel):
     symbol_id: str
     long_name: str
-    count: int
-    percentage: float
+    shares_count: int
+    shares_percentage: float
 
 
 class SymbolShareHolder(BaseModel):
-    _company_isin: str
+    _company_isin: str = PrivateAttr()
     id: str
     name: str
+
+    def __init__(self, _company_isin: str, **data: Any):
+        super().__init__(**data)
+        self._company_isin = _company_isin
 
     def get_portfolio_data(self) -> list[SymbolShareHolderPortfolioRow]:
         """
@@ -29,14 +35,14 @@ class SymbolShareHolder(BaseModel):
         return [SymbolShareHolderPortfolioRow(
             symbol_id=row['symbol_id'],
             long_name=row['long_name'],
-            count=row['count'],
-            percentage=row['percentage'],
+            shares_count=row['shares_count'],
+            shares_percentage=row['shares_percentage'],
         ) for row in raw_data]
 
 
 class SymbolShareHolderChartRow(BaseModel):
     date: jdate
-    count: int
+    shares_count: int
 
     class Config:
         arbitrary_types_allowed = True
@@ -44,9 +50,9 @@ class SymbolShareHolderChartRow(BaseModel):
 
 class SymbolShareHolderDataRow(BaseModel):
     shareholder: SymbolShareHolder
-    count: int
-    percentage: float
-    change: int
+    shares_count: int
+    shares_percentage: float
+    shares_change: int
 
     def get_chart_data(self) -> list[SymbolShareHolderChartRow]:
         """
@@ -56,9 +62,9 @@ class SymbolShareHolderDataRow(BaseModel):
         raw_data = _core.get_symbol_shareholder_details(
             shareholder_id=self.shareholder.id,
             company_isin=self.shareholder._company_isin,
-        )
+        )['chart']
 
         return [SymbolShareHolderChartRow(
             date=row['date'],
-            count=row['count'],
+            shares_count=row['shares_count'],
         ) for row in raw_data]

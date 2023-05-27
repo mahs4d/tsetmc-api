@@ -121,7 +121,7 @@ _STATS_CLIENT_TYPE_INDICES = {
 
 def get_watch_price_data(refid: int = 0, heven: int = 0) -> tuple[dict, int, int]:
     response = requests.get(
-        url='http://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx',
+        url='http://old.tsetmc.com/tsev2/data/MarketWatchPlus.aspx',
         params={
             'h': heven,
             'r': refid,
@@ -218,7 +218,7 @@ def get_watch_price_data(refid: int = 0, heven: int = 0) -> tuple[dict, int, int
 
 def get_watch_traders_type_data() -> dict:
     response = requests.get(
-        url='http://www.tsetmc.com/tsev2/data/ClientTypeAll.aspx',
+        url='http://old.tsetmc.com/tsev2/data/ClientTypeAll.aspx',
         params={},
         verify=False,
         timeout=20,
@@ -308,7 +308,7 @@ def get_watch_daily_history_data() -> dict:
 
 def get_watch_raw_stats_data() -> dict:
     response = requests.get(
-        url='http://www.tsetmc.com/tsev2/data/InstValue.aspx?t=a',
+        url='http://old.tsetmc.com/tsev2/data/InstValue.aspx?t=a',
         params={},
         verify=False,
         timeout=20,
