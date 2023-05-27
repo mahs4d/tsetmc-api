@@ -10,7 +10,7 @@ from ..utils import convert_deven_to_jdate
 
 def get_symbol_intraday_price_chart(symbol_id: str) -> list[dict]:
     response = requests.get(
-        url='http://www.tsetmc.com/tsev2/chart/data/IntraDayPrice.aspx',
+        url='http://old.tsetmc.com/tsev2/chart/data/IntraDayPrice.aspx',
         params={'i': symbol_id},
         verify=False,
         timeout=20,
@@ -38,7 +38,7 @@ def get_symbol_intraday_price_chart(symbol_id: str) -> list[dict]:
 
 def get_symbol_price_overview(symbol_id: str) -> dict:
     response = requests.get(
-        url='http://www.tsetmc.com/tsev2/data/instinfodata.aspx',
+        url='http://old.tsetmc.com/tsev2/data/instinfodata.aspx',
         params={
             'i': symbol_id,
             'c': 27,
@@ -146,7 +146,7 @@ def get_symbol_price_overview(symbol_id: str) -> dict:
 
 def get_symbol_supervisor_messages(symbol_id: str) -> list[dict]:
     response = requests.get(
-        url=' http://tsetmc.ir/Loader.aspx',
+        url='http://old.tsetmc.com/Loader.aspx',
         params={
             'i': symbol_id,
             'Partree': '15131W',
@@ -181,7 +181,7 @@ def get_symbol_supervisor_messages(symbol_id: str) -> list[dict]:
 
 def get_symbol_daily_ticks_history(symbol_id: str) -> list[dict]:
     response = requests.get(
-        url='http://www.tsetmc.com/tsev2/data/InstTradeHistory.aspx',
+        url='http://old.tsetmc.com/tsev2/data/InstTradeHistory.aspx',
         params={
             'i': symbol_id,
             'Top': 999999,
@@ -222,7 +222,7 @@ def get_symbol_daily_ticks_history(symbol_id: str) -> list[dict]:
 
 def get_symbol_notifications(symbol_id: str) -> list[dict]:
     response = requests.get(
-        url='http://tsetmc.ir/tsev2/data/CodalTopNew.aspx',
+        url='http://old.tsetmc.com/tsev2/data/CodalTopNew.aspx',
         params={
             'i': symbol_id,
         },
@@ -244,7 +244,7 @@ def get_symbol_notifications(symbol_id: str) -> list[dict]:
 
 def get_symbol_state_changes(symbol_id: str) -> list[dict]:
     response = requests.get(
-        url=' http://tsetmc.ir/Loader.aspx',
+        url='http://old.tsetmc.com/Loader.aspx',
         params={
             'i': symbol_id,
             'Partree': '15131L',
@@ -271,7 +271,7 @@ def get_symbol_state_changes(symbol_id: str) -> list[dict]:
 
 def get_symbol_id_details(symbol_id: str) -> dict:
     response = requests.get(
-        url='http://tsetmc.ir/Loader.aspx',
+        url='http://old.tsetmc.com/Loader.aspx',
         params={
             'i': symbol_id,
             'Partree': '15131M',
@@ -316,7 +316,7 @@ def get_symbol_id_details(symbol_id: str) -> dict:
 
 def get_symbol_traders_type_history(symbol_id: str) -> list[dict]:
     response = requests.get(
-        url='http://tsetmc.ir/tsev2/data/clienttype.aspx',
+        url='http://old.tsetmc.com/tsev2/data/clienttype.aspx',
         params={
             'i': symbol_id,
         },
@@ -372,7 +372,7 @@ def get_symbol_traders_type_history(symbol_id: str) -> list[dict]:
 
 def get_symbol_shareholders(company_isin: str) -> list[dict]:
     response = requests.get(
-        url='http://tsetmc.ir/Loader.aspx',
+        url='http://old.tsetmc.com/Loader.aspx',
         params={
             'c': company_isin,
             'Partree': '15131T',
@@ -400,9 +400,9 @@ def get_symbol_shareholders(company_isin: str) -> list[dict]:
         shareholders.append({
             'id': shareholder_id,
             'name': name,
-            'count': count,
-            'percentage': percentage,
-            'change': change,
+            'shares_count': count,
+            'shares_percentage': percentage,
+            'shares_change': change,
         })
 
     return shareholders
@@ -410,7 +410,7 @@ def get_symbol_shareholders(company_isin: str) -> list[dict]:
 
 def get_symbol_shareholder_details(shareholder_id: str, company_isin: str):
     response = requests.get(
-        url=f'http://www.tsetmc.com/tsev2/data/ShareHolder.aspx?i={shareholder_id}%2C{company_isin}',
+        url=f'http://old.tsetmc.com/tsev2/data/ShareHolder.aspx?i={shareholder_id}%2C{company_isin}',
         params={
             'i': f'{shareholder_id}%C{company_isin}',
         },
@@ -429,14 +429,14 @@ def get_symbol_shareholder_details(shareholder_id: str, company_isin: str):
         if len(row) == 2:
             chart.append({
                 'date': convert_deven_to_jdate(deven=int(row[0])),
-                'count': int(row[1]),
+                'shares_count': int(row[1]),
             })
         elif len(row) == 4:
             portfolio.append({
                 'symbol_id': row[0][1:] if '#' in row[0] else row[0],
                 'long_name': row[1],
-                'count': int(row[2]),
-                'percentage': float(row[3]),
+                'shares_count': int(row[2]),
+                'shares_percentage': float(row[3]),
             })
 
     return {

@@ -254,9 +254,9 @@ class Symbol:
                 id=row['id'],
                 name=row['name'],
             ),
-            count=row['count'],
-            percentage=row['percentage'],
-            change=row['change'],
+            shares_count=row['shares_count'],
+            shares_percentage=row['shares_percentage'],
+            shares_change=row['shares_change'],
         ) for row in raw_data]
 
         return shareholders

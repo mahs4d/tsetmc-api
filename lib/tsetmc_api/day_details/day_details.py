@@ -138,15 +138,19 @@ class DayDetails:
         )
 
         old_shareholders = [DayDetailsShareHolderDataRow(
+            symbol_id=self.symbol_id,
+            date=self.date,
             shareholder=DayDetailsShareHolder(id=row['id'], name=row['name']),
             count=row['count'],
             percentage=row['percentage'],
         ) for row in raw_old_shareholders]
 
         new_shareholders = [DayDetailsShareHolderDataRow(
+            symbol_id=self.symbol_id,
+            date=self.date,
             shareholder=DayDetailsShareHolder(id=row['id'], name=row['name']),
-            count=row['count'],
-            percentage=row['percentage'],
+            shares_count=row['shares_count'],
+            shares_percentage=row['shares_percentage'],
         ) for row in raw_new_shareholders]
 
         return old_shareholders, new_shareholders

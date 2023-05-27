@@ -8,11 +8,25 @@ You can install this library using the following command:
 
 `pip install tsetmc-api`
 
+## Examples
+
+You can find examples of using each component in `examples` directory.
+
+| Component    | Example File                                                |
+|--------------|-------------------------------------------------------------|
+| Symbol       | [symbol_example.py](examples/symbol_example.py)             |
+| Market Watch | [market_watch_example.py](examples/market_watch_example.py) |
+| Day Details  | [day_details_example.py](examples/day_details_example.py)   |
+| Market Map   | [market_map_example.py](examples/market_map_example.py)     |
+| Group        | [group_example.py](examples/group_example.py)               |
+
 ## Usage
 
-- **symbol:** working with main symbol page and live data (e.g. [this page](http://www.tsetmc.com/loader.aspx?ParTree=151311&i=43362635835198978))
+- **symbol:** working with main symbol page and live data (
+  e.g. [this page](http://www.tsetmc.com/loader.aspx?ParTree=151311&i=43362635835198978))
 - **market_watch:** getting data visible from [market watch page](http://www.tsetmc.com/Loader.aspx?ParTree=15131F)
-- **day_details:** working with details of a symbol in a single day of history (e.g. [this page](http://cdn.tsetmc.com/History/43362635835198978/20221029))
+- **day_details:** working with details of a symbol in a single day of history (
+  e.g. [this page](http://cdn.tsetmc.com/History/43362635835198978/20221029))
 - **market_map:** getting data visible in [market map page](http://main.tsetmc.com/marketmap)
 - **group:** getting list of available symbol groups
 
@@ -40,6 +54,15 @@ Group component currently only has one function (`get_all_groups`) which returns
 
 Tsetmc sometimes returns 403 and you should retry.
 
+### TODO
+
+[ ] Migrate `symbol` component to use new tsetmc.
+[ ] Migrate `market_watch` component to use new tsetmc.
+[x] Migrate `day_details` component to use new tsetmc.
+[x] Migrate `market_map` component to use new tsetmc.
+[x] Migrate `group` component to use new tsetmc.
+
 ## Support and Donation
+
 If this repository helped you, please support it by giving a star (:star:).
 For donation please contact me at [mahdi74sadeghi@gmail.com](mailto:mahdi74sadeghi@gmail.com).

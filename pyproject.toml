@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tsetmc-api"
-version = "5.0.4"
+version = "5.0.5"
 description = "simple package to communicate and crawl data from tsetmc.com (Tehran Stock Exchange Website)"
 license = "MIT"
 repository = "https://github.com/mahs4d/tsetmc-api"
