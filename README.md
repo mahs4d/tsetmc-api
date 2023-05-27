@@ -56,13 +56,12 @@ Tsetmc sometimes returns 403 and you should retry.
 
 ### TODO
 
-[ ] Migrate `symbol` component to use new tsetmc.
-[ ] Migrate `market_watch` component to use new tsetmc.
-[x] Migrate `day_details` component to use new tsetmc.
-[x] Migrate `market_map` component to use new tsetmc.
-[x] Migrate `group` component to use new tsetmc.
+- [ ] Migrate `symbol` component to use new tsetmc.
+- [ ] Migrate `market_watch` component to use new tsetmc.
+- [x] Migrate `day_details` component to use new tsetmc.
+- [x] Migrate `market_map` component to use new tsetmc.
+- [x] Migrate `group` component to use new tsetmc.
 
 ## Support and Donation
 
 If this repository helped you, please support it by giving a star (:star:).
-For donation please contact me at [mahdi74sadeghi@gmail.com](mailto:mahdi74sadeghi@gmail.com).
