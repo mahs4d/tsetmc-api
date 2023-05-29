@@ -1,5 +1,6 @@
-from aiohttp import ClientSession
 from copy import deepcopy
+
+from aiohttp import ClientSession
 from jdatetime import date as jdate, time as jtime
 from requests import request
 from requests.exceptions import HTTPError
