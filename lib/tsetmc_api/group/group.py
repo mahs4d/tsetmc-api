@@ -20,12 +20,13 @@ class Group(BaseModel):
     type: GroupType
 
     @staticmethod
-    def get_all_groups() -> list[Group]:
+    def get_all_groups(raw_data: list[dict] = None) -> list[Group]:
         """
         returns list of symbol groups
         """
-
-        raw_data = _core.get_group_static_data()
+        
+        if raw_data is None:
+            raw_data = _core.get_group_static_data()
         return [Group(
             id=row['id'],
             code=row['code'],
@@ -33,3 +34,7 @@ class Group(BaseModel):
             description=row['description'],
             type=GroupType.PAPER if row['type'] == 'PaperType' else GroupType.INDUSTRIAL,
         ) for row in raw_data]
+    
+    @staticmethod
+    async def aio_get_all_groups() -> list[Group]:
+        return Group.get_all_groups(raw_data=await _core.aio_get_group_static_data())
