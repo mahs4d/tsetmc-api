@@ -1,25 +1,25 @@
-import requests
+from ..utils import safe_request, aio_safe_request
 
 
-def get_market_map_data(map_type: int, heven: int = 0) -> tuple[dict[dict], int]:
-    response = requests.get(
-        url='http://cdn.tsetmc.com/api/ClosingPrice/GetMarketMap',
-        params={
-            'market': 0,
-            'size': 1920,
-            'sector': 0,
-            'typeSelected': map_type,
-            'hEven': heven,
-        },
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()
-
+def get_market_map_data(map_type: int, heven: int = 0, response: dict = None) -> tuple[dict[dict], int]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://cdn.tsetmc.com/api/ClosingPrice/GetMarketMap',
+            params={
+                'market': 0,
+                'size': 1920,
+                'sector': 0,
+                'typeSelected': map_type,
+                'hEven': heven,
+            },
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()
+    
     min_heven = 0
     watch_data = {}
     for row in response:
@@ -41,3 +41,23 @@ def get_market_map_data(map_type: int, heven: int = 0) -> tuple[dict[dict], int]
         }
 
     return watch_data, min_heven
+
+
+async def aio_get_market_map_data(map_type: int, heven: int = 0) -> tuple[dict[dict], int]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://cdn.tsetmc.com/api/ClosingPrice/GetMarketMap',
+        params={
+            'market': 0,
+            'size': 1920,
+            'sector': 0,
+            'typeSelected': map_type,
+            'hEven': heven,
+        },
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = await response.json()
+    return get_market_map_data(map_type=map_type, heven=heven, response=response)

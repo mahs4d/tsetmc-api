@@ -35,14 +35,16 @@ class MarketMap:
 
         self._last_map_data = {}
 
-    def get_market_map_data(self, map_type: MapType = MapType.MARKET_VALUE) -> dict[str, MapDataRow]:
+    def get_market_map_data(self, map_type: MapType = MapType.MARKET_VALUE, raw_data: tuple[dict[dict], int] = None) -> dict[str, MapDataRow]:
         """
         returns symbol data in market map (in "naghshe bazar" page)
         !!! webserver occasionally throws 403 error, you should retry in a few seconds when this happens
         """
-
-        raw_data, new_heven = _core.get_market_map_data(map_type=map_type.value, heven=self._heven)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_market_map_data(map_type=map_type.value, heven=self._heven)
+        raw_data, new_heven = raw_data
+        
         self._last_map_data = deep_update(self._last_map_data, raw_data)
 
         map_data = {key: MapDataRow(
@@ -64,3 +66,10 @@ class MarketMap:
         ) for key, data in raw_data.items()}
 
         return map_data
+    
+    async def aio_get_market_map_data(self, map_type: MapType = MapType.MARKET_VALUE) -> dict[str, MapDataRow]:
+        return self.get_market_map_data(
+            map_type=map_type,
+            raw_data=await _core.aio_get_market_map_data(map_type=map_type.value, heven=self._heven)
+        )
+        
