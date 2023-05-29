@@ -13,14 +13,15 @@ class DayDetails:
     def __init__(self, symbol_id: str, date: jdate):
         self.symbol_id = symbol_id
         self.date = date
-
-    def get_price_overview(self) -> DayDetailsPriceOverview:
+    
+    def get_price_overview(self, raw_data: dict = None) -> DayDetailsPriceOverview:
         """
         returns an overview of price information for that day
         """
-
-        raw_data = _core.get_day_details_price_overview(symbol_id=self.symbol_id, date=self.date)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_day_details_price_overview(symbol_id=self.symbol_id, date=self.date)
+        
         return DayDetailsPriceOverview(
             price_change=raw_data['price_change'],
             low=raw_data['low'],
@@ -33,14 +34,15 @@ class DayDetails:
             volume=raw_data['volume'],
             value=raw_data['value'],
         )
-
-    def get_price_data(self) -> list[DayDetailsPriceDataRow]:
+    
+    def get_price_data(self, raw_data: list[dict] = None) -> list[DayDetailsPriceDataRow]:
         """
         returns instant prices (for each time in that date)
         """
-
-        raw_data = _core.get_day_details_price_data(symbol_id=self.symbol_id, date=self.date)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_day_details_price_data(symbol_id=self.symbol_id, date=self.date)
+        
         return [DayDetailsPriceDataRow(
             time=row['time'],
             close=row['close'],
@@ -49,14 +51,15 @@ class DayDetails:
             volume=row['volume'],
             count=row['count'],
         ) for row in raw_data]
-
-    def get_orderbook_data(self) -> list[DayDetailsOrderBookDataRow]:
+    
+    def get_orderbook_data(self, raw_data: list[dict] = None) -> list[DayDetailsOrderBookDataRow]:
         """
         returns instant orderbooks (for each time in that date)
         """
-
-        raw_data = _core.get_day_details_orderbook_data(symbol_id=self.symbol_id, date=self.date)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_day_details_orderbook_data(symbol_id=self.symbol_id, date=self.date)
+        
         return [DayDetailsOrderBookDataRow(
             time=data['time'],
             buy_rows=[DayDetailsOrderBookRow(
@@ -72,14 +75,15 @@ class DayDetails:
                 volume=row['volume'],
             ) for row in data['sell_rows']],
         ) for data in raw_data]
-
-    def get_traders_type_data(self) -> DayDetailsTradersTypeData:
+    
+    def get_traders_type_data(self, raw_data: dict = None) -> DayDetailsTradersTypeData:
         """
         returns traders type information for that day
         """
-
-        raw_data = _core.get_day_details_traders_type_data(symbol_id=self.symbol_id, date=self.date)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_day_details_traders_type_data(symbol_id=self.symbol_id, date=self.date)
+        
         return DayDetailsTradersTypeData(
             legal=DayDetailsTradersTypeInfo(
                 buy=DayDetailsTradersTypeSubInfo(
@@ -106,37 +110,42 @@ class DayDetails:
                 ),
             ),
         )
-
-    def get_trades_data(self, summarize: bool = False) -> list[DayDetailsTradeDataRow]:
+    
+    def get_trades_data(self, summarize: bool = False, raw_data: list[dict] = None) -> list[DayDetailsTradeDataRow]:
         """
         gets all trade data
         """
-
-        raw_data = _core.get_day_details_trade_data(symbol_id=self.symbol_id, date=self.date, summarize=summarize)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_day_details_trade_data(symbol_id=self.symbol_id, date=self.date, summarize=summarize)
+        
         return [DayDetailsTradeDataRow(
             time=row['time'],
             price=row['price'],
             volume=row['volume'],
         ) for row in raw_data]
-
-    def get_thresholds_data(self) -> DayDetailsThresholdsData:
-        raw_data = _core.get_day_details_thresholds_data(symbol_id=self.symbol_id, date=self.date)
+    
+    def get_thresholds_data(self, raw_data: dict = None) -> DayDetailsThresholdsData:
+        if raw_data is None:
+            raw_data = _core.get_day_details_thresholds_data(symbol_id=self.symbol_id, date=self.date)
         return DayDetailsThresholdsData(
             range_max=raw_data['max'],
             range_min=raw_data['min'],
         )
-
-    def get_shareholders_data(self) -> tuple[list[DayDetailsShareHolderDataRow], list[DayDetailsShareHolderDataRow]]:
+    
+    def get_shareholders_data(self, raw_data: tuple[list[dict], list[dict]] = None) -> tuple[
+        list[DayDetailsShareHolderDataRow], list[DayDetailsShareHolderDataRow]]:
         """
         gets list of shareholders before and after the day
         """
-
-        raw_old_shareholders, raw_new_shareholders = _core.get_day_details_shareholders_data(
-            symbol_id=self.symbol_id,
-            date=self.date,
-        )
-
+        
+        if raw_data is None:
+            raw_data = _core.get_day_details_shareholders_data(
+                symbol_id=self.symbol_id,
+                date=self.date,
+            )
+        raw_old_shareholders, raw_new_shareholders = raw_data
+        
         old_shareholders = [DayDetailsShareHolderDataRow(
             symbol_id=self.symbol_id,
             date=self.date,
@@ -144,7 +153,7 @@ class DayDetails:
             count=row['count'],
             percentage=row['percentage'],
         ) for row in raw_old_shareholders]
-
+        
         new_shareholders = [DayDetailsShareHolderDataRow(
             symbol_id=self.symbol_id,
             date=self.date,
@@ -152,5 +161,41 @@ class DayDetails:
             shares_count=row['shares_count'],
             shares_percentage=row['shares_percentage'],
         ) for row in raw_new_shareholders]
-
+        
         return old_shareholders, new_shareholders
+    
+    async def aio_get_price_overview(self) -> DayDetailsPriceOverview:
+        return self.get_price_overview(
+            raw_data=await _core.aio_get_day_details_price_overview(symbol_id=self.symbol_id, date=self.date)
+        )
+    
+    async def aio_get_price_data(self) -> list[DayDetailsPriceDataRow]:
+        return self.get_price_data(
+            raw_data=await _core.aio_get_day_details_price_data(symbol_id=self.symbol_id, date=self.date)
+        )
+    
+    async def aio_get_orderbook_data(self) -> list[DayDetailsOrderBookDataRow]:
+        return self.get_orderbook_data(
+            raw_data=await _core.aio_get_day_details_orderbook_data(symbol_id=self.symbol_id, date=self.date)
+        )
+    
+    async def aio_get_traders_type_data(self) -> DayDetailsTradersTypeData:
+        return self.get_traders_type_data(
+            raw_data=await _core.aio_get_day_details_traders_type_data(symbol_id=self.symbol_id, date=self.date)
+        )
+    
+    async def aio_get_trades_data(self, summarize: bool = False) -> list[DayDetailsTradeDataRow]:
+        return self.get_trades_data(
+            summarize=summarize,
+            raw_data=await _core.aio_get_day_details_trade_data(symbol_id=self.symbol_id, date=self.date, summarize=summarize)
+        )
+    
+    async def aio_get_thresholds_data(self) -> DayDetailsThresholdsData:
+        return self.get_thresholds_data(
+            raw_data=await _core.aio_get_day_details_thresholds_data(symbol_id=self.symbol_id, date=self.date)
+        )
+    
+    async def aio_get_shareholders_data(self) -> tuple[list[DayDetailsShareHolderDataRow], list[DayDetailsShareHolderDataRow]]:
+        return self.get_shareholders_data(
+            raw_data=await _core.aio_get_day_details_shareholders_data(symbol_id=self.symbol_id, date=self.date)
+        )

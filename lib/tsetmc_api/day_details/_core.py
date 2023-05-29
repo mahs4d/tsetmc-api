@@ -1,25 +1,24 @@
 from collections import defaultdict
 from copy import deepcopy
 
-import requests
 from jdatetime import date as jdate
 
-from ..utils import convert_deven_to_jdate, convert_heven_to_jtime
+from ..utils import convert_deven_to_jdate, convert_heven_to_jtime, safe_request, aio_safe_request
 
 
-def get_day_details_price_overview(symbol_id: str, date: jdate) -> dict:
-    t = date.togregorian().strftime('%Y%m%d')
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDaily/{symbol_id}/{t}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['closingPriceDaily']
+def get_day_details_price_overview(symbol_id: str, date: jdate, response: dict = None) -> dict:
+    if response is None:
+        t = date.togregorian().strftime('%Y%m%d')
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDaily/{symbol_id}/{t}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['closingPriceDaily']
 
     return {
         "price_change": response["priceChange"],
@@ -35,19 +34,19 @@ def get_day_details_price_overview(symbol_id: str, date: jdate) -> dict:
     }
 
 
-def get_day_details_price_data(symbol_id: str, date: jdate) -> list[dict]:
-    t = date.togregorian().strftime('%Y%m%d')
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceHistory/{symbol_id}/{t}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['closingPriceHistory']
+def get_day_details_price_data(symbol_id: str, date: jdate, response: dict = None) -> list[dict]:
+    if response is None:
+        t = date.togregorian().strftime('%Y%m%d')
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceHistory/{symbol_id}/{t}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['closingPriceHistory']
 
     price_data = [{
         'time': convert_heven_to_jtime(heven=row['hEven']),
@@ -61,19 +60,19 @@ def get_day_details_price_data(symbol_id: str, date: jdate) -> list[dict]:
     return price_data
 
 
-def get_day_details_orderbook_data(symbol_id: str, date: jdate) -> list[dict]:
-    t = date.togregorian().strftime('%Y%m%d')
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/BestLimits/{symbol_id}/{t}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['bestLimitsHistory']
+def get_day_details_orderbook_data(symbol_id: str, date: jdate, response: dict = None) -> list[dict]:
+    if response is None:
+        t = date.togregorian().strftime('%Y%m%d')
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/BestLimits/{symbol_id}/{t}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['bestLimitsHistory']
     response = sorted(response, key=lambda x: (x['hEven'], x['number']))
 
     prev_data = {'buy_rows': [], 'sell_rows': []}
@@ -117,20 +116,20 @@ def get_day_details_orderbook_data(symbol_id: str, date: jdate) -> list[dict]:
     } for key, value in heven_map.items()]
 
 
-def get_day_details_trade_data(symbol_id: str, date: jdate, summarize: bool) -> list[dict]:
-    t = date.togregorian().strftime('%Y%m%d')
-    summarize_url_ph = 'true' if summarize else 'false'
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/Trade/GetTradeHistory/{symbol_id}/{t}/{summarize_url_ph}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['tradeHistory']
+def get_day_details_trade_data(symbol_id: str, date: jdate, summarize: bool, response: dict = None) -> list[dict]:
+    if response is None:
+        t = date.togregorian().strftime('%Y%m%d')
+        summarize_url_ph = 'true' if summarize else 'false'
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/Trade/GetTradeHistory/{symbol_id}/{t}/{summarize_url_ph}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['tradeHistory']
 
     return [{
         'time': convert_heven_to_jtime(heven=row['hEven']),
@@ -139,19 +138,19 @@ def get_day_details_trade_data(symbol_id: str, date: jdate, summarize: bool) -> 
     } for row in response]
 
 
-def get_day_details_traders_type_data(symbol_id: str, date: jdate) -> dict:
-    t = date.togregorian().strftime('%Y%m%d')
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/ClientType/GetClientTypeHistory/{symbol_id}/{t}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['clientType']
+def get_day_details_traders_type_data(symbol_id: str, date: jdate, response: dict = None) -> dict:
+    if response is None:
+        t = date.togregorian().strftime('%Y%m%d')
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/ClientType/GetClientTypeHistory/{symbol_id}/{t}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['clientType']
 
     return {
         'legal': {
@@ -181,19 +180,19 @@ def get_day_details_traders_type_data(symbol_id: str, date: jdate) -> dict:
     }
 
 
-def get_day_details_thresholds_data(symbol_id: str, date: jdate) -> dict:
-    t = date.togregorian().strftime('%Y%m%d')
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/MarketData/GetStaticThreshold/{symbol_id}/{t}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['staticThreshold']
+def get_day_details_thresholds_data(symbol_id: str, date: jdate, response: dict = None) -> dict:
+    if response is None:
+        t = date.togregorian().strftime('%Y%m%d')
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/MarketData/GetStaticThreshold/{symbol_id}/{t}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['staticThreshold']
 
     return {
         'max': response[1]['psGelStaMax'],
@@ -201,19 +200,19 @@ def get_day_details_thresholds_data(symbol_id: str, date: jdate) -> dict:
     }
 
 
-def get_day_details_shareholders_data(symbol_id: str, date: jdate) -> tuple[list[dict], list[dict]]:
+def get_day_details_shareholders_data(symbol_id: str, date: jdate, response: dict = None) -> tuple[list[dict], list[dict]]:
     t = date.togregorian().strftime('%Y%m%d')
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/Shareholder/{symbol_id}/{t}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['shareShareholder']
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/Shareholder/{symbol_id}/{t}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['shareShareholder']
 
     old_shareholders = []
     new_shareholders = []
@@ -234,18 +233,18 @@ def get_day_details_shareholders_data(symbol_id: str, date: jdate) -> tuple[list
     return old_shareholders, new_shareholders
 
 
-def get_shareholder_chart_data(symbol_id: str, shareholder_id: str, days: int) -> list[dict]:
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderHistory/{symbol_id}/{shareholder_id}/{days}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['shareHolder']
+def get_shareholder_chart_data(symbol_id: str, shareholder_id: str, days: int, response: dict = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderHistory/{symbol_id}/{shareholder_id}/{days}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['shareHolder']
 
     return [{
         'date': convert_deven_to_jdate(deven=row['dEven']),
@@ -254,18 +253,18 @@ def get_shareholder_chart_data(symbol_id: str, shareholder_id: str, days: int) -
     } for row in response]
 
 
-def get_shareholder_portfolio(shareholder_id: str) -> list[dict]:
-    response = requests.get(
-        url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderCompanyList/{shareholder_id}',
-        params={},
-        headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.json()['shareHolderShare']
+def get_shareholder_portfolio(shareholder_id: str, response: dict = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderCompanyList/{shareholder_id}',
+            params={},
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+            },
+            verify=False
+        )
+        response = response.json()['shareHolderShare']
 
     return [{
         'symbol_id': row['instrument']['insCode'],
@@ -274,3 +273,139 @@ def get_shareholder_portfolio(shareholder_id: str) -> list[dict]:
         'shares_count': row['numberOfShares'],
         'shares_percent': row['perOfShares'],
     } for row in response]
+
+
+async def aio_get_day_details_price_overview(symbol_id: str, date: jdate) -> dict:
+    t = date.togregorian().strftime('%Y%m%d')
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceDaily/{symbol_id}/{t}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    js = (await response.json())
+    print(js)
+    response = js['closingPriceDaily']
+    return get_day_details_price_overview(symbol_id=symbol_id, date=date, response=response)
+
+
+async def aio_get_day_details_price_data(symbol_id: str, date: jdate) -> list[dict]:
+    t = date.togregorian().strftime('%Y%m%d')
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/ClosingPrice/GetClosingPriceHistory/{symbol_id}/{t}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['closingPriceHistory']
+    return get_day_details_price_data(symbol_id=symbol_id, date=date, response=response)
+
+
+async def aio_get_day_details_orderbook_data(symbol_id: str, date: jdate) -> list[dict]:
+    t = date.togregorian().strftime('%Y%m%d')
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/BestLimits/{symbol_id}/{t}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['bestLimitsHistory']
+    return get_day_details_orderbook_data(symbol_id=symbol_id, date=date, response=response)
+
+
+async def aio_get_day_details_trade_data(symbol_id: str, date: jdate, summarize: bool) -> list[dict]:
+    t = date.togregorian().strftime('%Y%m%d')
+    summarize_url_ph = 'true' if summarize else 'false'
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/Trade/GetTradeHistory/{symbol_id}/{t}/{summarize_url_ph}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['tradeHistory']
+    return get_day_details_trade_data(symbol_id=symbol_id, date=date, summarize=summarize, response=response)
+
+
+async def aio_get_day_details_traders_type_data(symbol_id: str, date: jdate) -> dict:
+    t = date.togregorian().strftime('%Y%m%d')
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/ClientType/GetClientTypeHistory/{symbol_id}/{t}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['clientType']
+    return get_day_details_traders_type_data(symbol_id=symbol_id, date=date, response=response)
+
+
+async def aio_get_day_details_thresholds_data(symbol_id: str, date: jdate) -> dict:
+    t = date.togregorian().strftime('%Y%m%d')
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/MarketData/GetStaticThreshold/{symbol_id}/{t}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['staticThreshold']
+    return get_day_details_thresholds_data(symbol_id=symbol_id, date=date, response=response)
+
+
+async def aio_get_day_details_shareholders_data(symbol_id: str, date: jdate) -> tuple[list[dict], list[dict]]:
+    t = date.togregorian().strftime('%Y%m%d')
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/Shareholder/{symbol_id}/{t}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['shareShareholder']
+    return get_day_details_shareholders_data(symbol_id=symbol_id, date=date, response=response)
+
+
+async def aio_get_shareholder_chart_data(symbol_id: str, shareholder_id: str, days: int) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderHistory/{symbol_id}/{shareholder_id}/{days}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['shareHolder']
+    return get_shareholder_chart_data(symbol_id=symbol_id, shareholder_id=shareholder_id, days=days, response=response)
+
+
+async def aio_get_shareholder_portfolio(shareholder_id: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://cdn.tsetmc.com/api/Shareholder/GetShareHolderCompanyList/{shareholder_id}',
+        params={},
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+        },
+        verify=False
+    )
+    response = (await response.json())['shareHolderShare']
+    return get_shareholder_portfolio(shareholder_id=shareholder_id, response=response)
