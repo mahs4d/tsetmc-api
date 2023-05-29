@@ -12,22 +12,24 @@ class MarketWatch:
         self._refid = 0
         self._last_price_data = {}
 
-    def get_price_data(self) -> dict[str, WatchPriceDataRow]:
+    def get_price_data(self, raw_data: tuple[dict, int, int] = None) -> dict[str, WatchPriceDataRow]:
         """
         gets basic price information (in "didbane bazar" page)
         """
-
-        raw_data, new_refid, new_heven, = _core.get_watch_price_data(refid=self._refid, heven=self._heven)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_watch_price_data(refid=self._refid, heven=self._heven)
+        raw_data, new_refid, new_heven, = raw_data
+        
         self._last_price_data = deep_update(self._last_price_data, raw_data)
-
+        
         watch_data = {}
         for symbol_id in self._last_price_data.keys():
             data = self._last_price_data[symbol_id]
-
+            
             if 'symbol_id' not in data:
                 continue
-
+            
             watch_data[symbol_id] = WatchPriceDataRow(
                 symbol_id=data['symbol_id'],
                 isin=data['isin'],
@@ -65,19 +67,20 @@ class MarketWatch:
                     ) for row in data['orderbook']['sell_rows'].values()],
                 )
             )
-
+        
         self._heven = new_heven
         self._refid = new_refid
-
+        
         return watch_data
-
-    def get_traders_type_data(self) -> dict[str, WatchTradersTypeDataRow]:
+    
+    def get_traders_type_data(self, raw_data: dict = None) -> dict[str, WatchTradersTypeDataRow]:
         """
         gets traders type data (in "didebane bazar" page)
         """
-
-        raw_data = _core.get_watch_traders_type_data()
-
+        
+        if raw_data is None:
+            raw_data = _core.get_watch_traders_type_data()
+        
         watch_data = {}
         for key, data in raw_data.items():
             watch_data[key] = WatchTradersTypeDataRow(
@@ -102,16 +105,17 @@ class MarketWatch:
                     ),
                 ),
             )
-
+        
         return watch_data
-
-    def get_daily_history_data(self) -> dict[str, list[WatchDailyHistoryDataRow]]:
+    
+    def get_daily_history_data(self, raw_data: dict = None) -> dict[str, list[WatchDailyHistoryDataRow]]:
         """
         gets 30 day history of symbols (in "didbane bazar" page)
         """
-
-        raw_data = _core.get_watch_daily_history_data()
-
+        
+        if raw_data is None:
+            raw_data = _core.get_watch_daily_history_data()
+        
         watch_data = {}
         for symbol_id in raw_data.keys():
             watch_data[symbol_id] = [WatchDailyHistoryDataRow(
@@ -126,17 +130,50 @@ class MarketWatch:
                 high=row['high'],
                 yesterday=row['yesterday'],
             ) for row in raw_data[symbol_id]]
-
+        
         return watch_data
-
-    def get_raw_stats_data(self) -> dict[list]:
+    
+    def get_raw_stats_data(self, raw_data: dict = None) -> dict[list]:
         """
         returns a list of stats for each symbol. refer to tsetmc.com for information of what each item in the list is
         """
-
-    def get_stats_data(self) -> dict[dict]:
+        
+        if raw_data is None:
+            raw_data = _core.get_watch_raw_stats_data()
+        
+        return raw_data
+    
+    def get_stats_data(self, raw_data: dict = None) -> dict[dict]:
         """
         !!! EXPERIMENTAL: returns stats in dict, may be wrong !!!
         """
-
-        return _core.get_watch_stats_data()
+        
+        if raw_data is None:
+            raw_data = _core.get_watch_stats_data()
+        
+        return raw_data
+    
+    async def aio_get_price_data(self) -> dict[str, WatchPriceDataRow]:
+        return self.get_price_data(
+            raw_data=await _core.aio_get_watch_price_data(refid=self._refid, heven=self._heven)
+        )
+    
+    async def aio_get_traders_type_data(self) -> dict[str, WatchTradersTypeDataRow]:
+        return self.get_traders_type_data(
+            raw_data=await _core.aio_get_watch_traders_type_data()
+        )
+    
+    async def aio_get_daily_history_data(self) -> dict[str, list[WatchDailyHistoryDataRow]]:
+        return self.get_daily_history_data(
+            raw_data=await _core.aio_get_watch_daily_history_data()
+        )
+    
+    async def aio_get_raw_stats_data(self) -> dict[list]:
+        return self.get_raw_stats_data(
+            raw_data=await _core.aio_get_watch_raw_stats_data()
+        )
+    
+    async def aio_get_stats_data(self) -> dict[dict]:
+        return self.get_stats_data(
+            raw_data=await _core.aio_get_watch_stats_data()
+        )

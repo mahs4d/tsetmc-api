@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-import requests
+from ..utils import safe_request, aio_safe_request
 
 _STATS_TRADES_INDICES = {
     1: 'average_value_3_month',  # میانگین ارزش معاملات در 3 ماه گذشته
@@ -119,19 +119,19 @@ _STATS_CLIENT_TYPE_INDICES = {
 }
 
 
-def get_watch_price_data(refid: int = 0, heven: int = 0) -> tuple[dict, int, int]:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/MarketWatchPlus.aspx',
-        params={
-            'h': heven,
-            'r': refid,
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_watch_price_data(refid: int = 0, heven: int = 0, response: str = None) -> tuple[dict, int, int]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/data/MarketWatchPlus.aspx',
+            params={
+                'h': heven,
+                'r': refid,
+            },
+            verify=False
+        )
+        response = response.text
+    
     sections = response.split('@')
 
     max_heven = 0
@@ -216,16 +216,16 @@ def get_watch_price_data(refid: int = 0, heven: int = 0) -> tuple[dict, int, int
     return watch_data, refid, max_heven
 
 
-def get_watch_traders_type_data() -> dict:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/ClientTypeAll.aspx',
-        params={},
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_watch_traders_type_data(response: str = None) -> dict:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/data/ClientTypeAll.aspx',
+            params={},
+            verify=False
+        )
+        response = response.text
+    
     watch_data = {}
 
     rows = response.split(';')
@@ -265,16 +265,16 @@ def get_watch_traders_type_data() -> dict:
     return watch_data
 
 
-def get_watch_daily_history_data() -> dict:
-    response = requests.get(
-        url='http://members.tsetmc.com/tsev2/data/ClosingPriceAll.aspx',
-        params={},
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_watch_daily_history_data(response: str = None) -> dict:
+    if response is None:
+        # http is force redirected to https and its better to send request to https right away
+        response = safe_request(
+            method='GET',
+            url='https://members.tsetmc.com/tsev2/data/ClosingPriceAll.aspx',
+            params={}
+        )
+        response = response.text
+    
     watch_data = defaultdict(list)
 
     symbol_id = None
@@ -306,16 +306,16 @@ def get_watch_daily_history_data() -> dict:
     return watch_data
 
 
-def get_watch_raw_stats_data() -> dict:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/InstValue.aspx?t=a',
-        params={},
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_watch_raw_stats_data(response: str = None) -> dict:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/data/InstValue.aspx?t=a',
+            params={},
+            verify=False
+        )
+        response = response.text
+    
     symbol_id = None
     ret = defaultdict(dict)
     sections = response.split(';')
@@ -333,9 +333,9 @@ def get_watch_raw_stats_data() -> dict:
     return ret
 
 
-def get_watch_stats_data() -> dict:
-    raw_stats = get_watch_raw_stats_data()
-
+def get_watch_stats_data(raw_stats: dict = None) -> dict:
+    raw_stats = raw_stats or get_watch_raw_stats_data()
+    
     ret = {}
     for symbol_id, stats in raw_stats.items():
         ret[symbol_id] = {
@@ -383,3 +383,54 @@ def get_watch_stats_data() -> dict:
             ret[symbol_id][sub_name][indices_obj[index]] = val
 
     return ret
+
+
+async def aio_get_watch_price_data(refid: int = 0, heven: int = 0) -> tuple[dict, int, int]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/data/MarketWatchPlus.aspx',
+        params={
+            'h': heven,
+            'r': refid,
+        },
+        verify=False
+    )
+    response = response.text
+    return get_watch_price_data(refid=refid, heven=heven, response=response)
+
+
+async def aio_get_watch_traders_type_data() -> dict:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/data/ClientTypeAll.aspx',
+        params={},
+        verify=False
+    )
+    response = response.text
+    return get_watch_traders_type_data(response=response)
+
+
+async def aio_get_watch_daily_history_data() -> dict:
+    # http is force redirected to https and its better to send request to https right away
+    response = await aio_safe_request(
+        method='GET',
+        url='https://members.tsetmc.com/tsev2/data/ClosingPriceAll.aspx',
+        params={}
+    )
+    response = response.text
+    return get_watch_daily_history_data(response=response)
+
+
+async def aio_get_watch_raw_stats_data() -> dict:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/data/InstValue.aspx?t=a',
+        params={},
+        verify=False
+    )
+    response = response.text
+    return get_watch_raw_stats_data(response=response)
+
+
+async def aio_get_watch_stats_data() -> dict:
+    return get_watch_stats_data(raw_stats=await aio_get_watch_raw_stats_data())
