@@ -13,14 +13,16 @@ from .traders_type import SymbolTradersTypeDataRow, SymbolTradersTypeInfo, Symbo
 class Symbol:
     def __init__(self, symbol_id: str):
         self.symbol_id = symbol_id
+        self._company_isin = None
 
-    def get_price_overview(self) -> SymbolPriceOverview:
+    def get_price_overview(self, raw_data: dict = None) -> SymbolPriceOverview:
         """
         gets the last price overview of the symbol and returns most of the information (in "dar yek negah" tab)
         """
-
-        raw_data = _core.get_symbol_price_overview(symbol_id=self.symbol_id)
-
+        
+        if raw_data is None:
+            raw_data = _core.get_symbol_price_overview(symbol_id=self.symbol_id)
+        
         tick = SymbolPriceData(
             last=raw_data['price_data']['last'],
             close=raw_data['price_data']['close'],
@@ -91,12 +93,13 @@ class Symbol:
             group_data=group_data,
         )
 
-    def get_intraday_price_chart_data(self) -> list[SymbolIntraDayPriceChartDataRow]:
+    def get_intraday_price_chart_data(self, raw_data: list[dict] = None) -> list[SymbolIntraDayPriceChartDataRow]:
         """
         gets last days intraday price chart (in "dar yek negah" tab)
         """
 
-        raw_data = _core.get_symbol_intraday_price_chart(symbol_id=self.symbol_id)
+        if raw_data is None:
+            raw_data = _core.get_symbol_intraday_price_chart(symbol_id=self.symbol_id)
 
         ticks = [SymbolIntraDayPriceChartDataRow(
             time=row['time'],
@@ -109,12 +112,13 @@ class Symbol:
 
         return ticks
 
-    def get_supervisor_messages_data(self) -> list[SymbolSupervisorMessageDataRow]:
+    def get_supervisor_messages_data(self, raw_data: list[dict] = None) -> list[SymbolSupervisorMessageDataRow]:
         """
         get list of supervisor messages (in "payame nazer" tab)
         """
 
-        raw_data = _core.get_symbol_supervisor_messages(symbol_id=self.symbol_id)
+        if raw_data is None:
+            raw_data = _core.get_symbol_supervisor_messages(symbol_id=self.symbol_id)
 
         messages = [SymbolSupervisorMessageDataRow(
             datetime=row['datetime'],
@@ -124,12 +128,13 @@ class Symbol:
 
         return messages
 
-    def get_notifications_data(self) -> list[SymbolNotificationsDataRow]:
+    def get_notifications_data(self, raw_data: list[dict] = None) -> list[SymbolNotificationsDataRow]:
         """
         get list of notifications (in "etelaiye ha" tab)
         """
 
-        raw_data = _core.get_symbol_notifications(symbol_id=self.symbol_id)
+        if raw_data is None:
+            raw_data = _core.get_symbol_notifications(symbol_id=self.symbol_id)
 
         notifications = [SymbolNotificationsDataRow(
             datetime=row['datetime'],
@@ -138,12 +143,13 @@ class Symbol:
 
         return notifications
 
-    def get_state_changes_data(self) -> list[SymbolStateChangeDataRow]:
+    def get_state_changes_data(self, raw_data: list[dict] = None) -> list[SymbolStateChangeDataRow]:
         """
         get list of state changes (in "taghire vaziat" tab)
         """
 
-        raw_data = _core.get_symbol_state_changes(symbol_id=self.symbol_id)
+        if raw_data is None:
+            raw_data = _core.get_symbol_state_changes(symbol_id=self.symbol_id)
 
         state_changes = [SymbolStateChangeDataRow(
             datetime=row['datetime'],
@@ -152,12 +158,13 @@ class Symbol:
 
         return state_changes
 
-    def get_daily_history(self) -> list[SymbolDailyPriceDataRow]:
+    def get_daily_history(self, raw_data: list[dict] = None) -> list[SymbolDailyPriceDataRow]:
         """
         get list of daily ticks history (in "sabeghe" tab)
         """
 
-        raw_data = _core.get_symbol_daily_ticks_history(symbol_id=self.symbol_id)
+        if raw_data is None:
+            raw_data = _core.get_symbol_daily_ticks_history(symbol_id=self.symbol_id)
 
         ticks = [SymbolDailyPriceDataRow(
             date=row['date'],
@@ -174,13 +181,16 @@ class Symbol:
 
         return ticks
 
-    def get_id_details(self) -> SymbolIdDetails:
+    def get_id_details(self, raw_data: dict = None) -> SymbolIdDetails:
         """
         gets symbol identity details and returns all the information (in "shenase" tab)
         """
 
-        raw_data = _core.get_symbol_id_details(symbol_id=self.symbol_id)
-
+        if raw_data is None:
+            raw_data = _core.get_symbol_id_details(symbol_id=self.symbol_id)
+        if self._company_isin is None:
+            self._company_isin = raw_data['company_isin']
+        
         details = SymbolIdDetails(
             isin=raw_data['isin'],
             short_isin=raw_data['short_isin'],
@@ -204,12 +214,13 @@ class Symbol:
 
         return details
 
-    def get_traders_type_history(self) -> list[SymbolTradersTypeDataRow]:
+    def get_traders_type_history(self, raw_data: list[dict] = None) -> list[SymbolTradersTypeDataRow]:
         """
         returns daily traders type history (in "haghihi-hoghooghi" tab)
         """
-
-        raw_data = _core.get_symbol_traders_type_history(symbol_id=self.symbol_id)
+        
+        if raw_data is None:
+            raw_data = _core.get_symbol_traders_type_history(symbol_id=self.symbol_id)
 
         traders_type_history = [SymbolTradersTypeDataRow(
             legal=SymbolTradersTypeInfo(
@@ -240,17 +251,20 @@ class Symbol:
 
         return traders_type_history
 
-    def get_shareholders_data(self) -> list[SymbolShareHolderDataRow]:
+    def get_shareholders_data(self, raw_data: list[dict] = None) -> list[SymbolShareHolderDataRow]:
         """
         returns list of major shareholders (in "saham daran" tab)
         """
-
-        company_isin = self.get_id_details().company_isin
-        raw_data = _core.get_symbol_shareholders(company_isin=company_isin)
-
+        if raw_data is None:
+            if self._company_isin is None:
+                self.get_id_details()
+            raw_data = _core.get_symbol_shareholders(company_isin=self._company_isin)
+        else:
+            raw_data = raw_data
+        
         shareholders = [SymbolShareHolderDataRow(
             shareholder=SymbolShareHolder(
-                _company_isin=company_isin,
+                _company_isin=self._company_isin,
                 id=row['id'],
                 name=row['name'],
             ),
@@ -258,5 +272,53 @@ class Symbol:
             shares_percentage=row['shares_percentage'],
             shares_change=row['shares_change'],
         ) for row in raw_data]
-
+        
         return shareholders
+    
+    async def aio_get_price_overview(self) -> SymbolPriceOverview:
+        return self.get_price_overview(
+            raw_data=await _core.aio_get_symbol_price_overview(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_intraday_price_chart_data(self) -> list[SymbolIntraDayPriceChartDataRow]:
+        return self.get_intraday_price_chart_data(
+            raw_data=await _core.aio_get_symbol_intraday_price_chart(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_supervisor_messages_data(self) -> list[SymbolSupervisorMessageDataRow]:
+        return self.get_supervisor_messages_data(
+            raw_data=await _core.aio_get_symbol_supervisor_messages(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_notifications_data(self) -> list[SymbolNotificationsDataRow]:
+        return self.get_notifications_data(
+            raw_data=await _core.aio_get_symbol_notifications(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_state_changes_data(self) -> list[SymbolStateChangeDataRow]:
+        return self.get_state_changes_data(
+            raw_data=await _core.aio_get_symbol_state_changes(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_daily_history(self) -> list[SymbolDailyPriceDataRow]:
+        return self.get_daily_history(
+            raw_data=await _core.aio_get_symbol_daily_ticks_history(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_id_details(self) -> SymbolIdDetails:
+        return self.get_id_details(
+            raw_data=await _core.aio_get_symbol_id_details(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_traders_type_history(self) -> list[SymbolTradersTypeDataRow]:
+        return self.get_traders_type_history(
+            raw_data=await _core.aio_get_symbol_traders_type_history(symbol_id=self.symbol_id)
+        )
+    
+    async def aio_get_shareholders_data(self) -> list[SymbolShareHolderDataRow]:
+        if self._company_isin is None:
+            await self.aio_get_id_details()
+        
+        return self.get_shareholders_data(
+            raw_data=await _core.aio_get_symbol_shareholders(company_isin=self._company_isin)
+        )

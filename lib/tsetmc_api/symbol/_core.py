@@ -1,23 +1,22 @@
 import ast
 import locale
 
-import requests
 from bs4 import BeautifulSoup
 from jdatetime import time as jtime, date as jdate, datetime as jdatetime
 
-from ..utils import convert_deven_to_jdate
+from ..utils import convert_deven_to_jdate, safe_request, aio_safe_request
 
 
-def get_symbol_intraday_price_chart(symbol_id: str) -> list[dict]:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/chart/data/IntraDayPrice.aspx',
-        params={'i': symbol_id},
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_intraday_price_chart(symbol_id: str, response: str = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/chart/data/IntraDayPrice.aspx',
+            params={'i': symbol_id},
+            verify=False
+        )
+        response = response.text
+    
     ticks = response.split(';')
 
     result = []
@@ -36,19 +35,19 @@ def get_symbol_intraday_price_chart(symbol_id: str) -> list[dict]:
     return result
 
 
-def get_symbol_price_overview(symbol_id: str) -> dict:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/instinfodata.aspx',
-        params={
-            'i': symbol_id,
-            'c': 27,
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_price_overview(symbol_id: str, response: str = None) -> dict:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/data/instinfodata.aspx',
+            params={
+                'i': symbol_id,
+                'c': 27,
+            },
+            verify=False
+        )
+        response = response.text
+    
     all_sections = response.split(';')
 
     # price section
@@ -144,19 +143,19 @@ def get_symbol_price_overview(symbol_id: str) -> dict:
     }
 
 
-def get_symbol_supervisor_messages(symbol_id: str) -> list[dict]:
-    response = requests.get(
-        url='http://old.tsetmc.com/Loader.aspx',
-        params={
-            'i': symbol_id,
-            'Partree': '15131W',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_supervisor_messages(symbol_id: str, response: str = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/Loader.aspx',
+            params={
+                'i': symbol_id,
+                'Partree': '15131W',
+            },
+            verify=False
+        )
+        response = response.text
+    
     soup = BeautifulSoup(response, 'lxml')
 
     trs = soup.find('div', {'class': 'content'}).table.tbody.find_all('tr')
@@ -179,20 +178,20 @@ def get_symbol_supervisor_messages(symbol_id: str) -> list[dict]:
     return messages
 
 
-def get_symbol_daily_ticks_history(symbol_id: str) -> list[dict]:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/InstTradeHistory.aspx',
-        params={
-            'i': symbol_id,
-            'Top': 999999,
-            'A': 0,
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_daily_ticks_history(symbol_id: str, response: str = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/data/InstTradeHistory.aspx',
+            params={
+                'i': symbol_id,
+                'Top': 999999,
+                'A': 0,
+            },
+            verify=False
+        )
+        response = response.text
+    
     data = response.split(';')
     ticks = []
     for row in data:
@@ -220,18 +219,18 @@ def get_symbol_daily_ticks_history(symbol_id: str) -> list[dict]:
     return ticks
 
 
-def get_symbol_notifications(symbol_id: str) -> list[dict]:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/CodalTopNew.aspx',
-        params={
-            'i': symbol_id,
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_notifications(symbol_id: str, response: str = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/data/CodalTopNew.aspx',
+            params={
+                'i': symbol_id,
+            },
+            verify=False
+        )
+        response = response.text
+    
     data = ast.literal_eval(response)
 
     notifications = [{
@@ -242,19 +241,19 @@ def get_symbol_notifications(symbol_id: str) -> list[dict]:
     return notifications
 
 
-def get_symbol_state_changes(symbol_id: str) -> list[dict]:
-    response = requests.get(
-        url='http://old.tsetmc.com/Loader.aspx',
-        params={
-            'i': symbol_id,
-            'Partree': '15131L',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_state_changes(symbol_id: str, response: str = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/Loader.aspx',
+            params={
+                'i': symbol_id,
+                'Partree': '15131L',
+            },
+            verify=False
+        )
+        response = response.text
+    
     data = BeautifulSoup(response, 'lxml')
 
     state_changes = []
@@ -269,19 +268,19 @@ def get_symbol_state_changes(symbol_id: str) -> list[dict]:
     return state_changes
 
 
-def get_symbol_id_details(symbol_id: str) -> dict:
-    response = requests.get(
-        url='http://old.tsetmc.com/Loader.aspx',
-        params={
-            'i': symbol_id,
-            'Partree': '15131M',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_id_details(symbol_id: str, response: str = None) -> dict:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/Loader.aspx',
+            params={
+                'i': symbol_id,
+                'Partree': '15131M',
+            },
+            verify=False
+        )
+        response = response.text
+    
     data = BeautifulSoup(response, 'lxml')
 
     trs = data.find_all('tr')
@@ -314,27 +313,30 @@ def get_symbol_id_details(symbol_id: str) -> dict:
     return result
 
 
-def get_symbol_traders_type_history(symbol_id: str) -> list[dict]:
-    response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/clienttype.aspx',
-        params={
-            'i': symbol_id,
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_traders_type_history(symbol_id: str, response: str = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/tsev2/data/clienttype.aspx',
+            params={
+                'i': symbol_id,
+            },
+            verify=False
+        )
+        response = response.text
+    
     traders_type_history = []
     raw_data = response.split(';')
     for row in raw_data:
-        (
-            dt,
-            r_buy_c, l_buy_c, r_sell_c, l_sell_c,
-            r_buy_v, l_buy_v, r_sell_v, l_sell_v,
-            r_buy_vl, l_buy_vl, r_sell_vl, l_sell_vl
-        ) = row.split(',')
+        try:
+            (
+                dt,
+                r_buy_c, l_buy_c, r_sell_c, l_sell_c,
+                r_buy_v, l_buy_v, r_sell_v, l_sell_v,
+                r_buy_vl, l_buy_vl, r_sell_vl, l_sell_vl
+            ) = row.split(',')
+        except ValueError:
+            continue
         traders_type_history.append({
             'date': jdate.fromgregorian(
                 year=int(dt[:4]),
@@ -370,19 +372,19 @@ def get_symbol_traders_type_history(symbol_id: str) -> list[dict]:
     return traders_type_history
 
 
-def get_symbol_shareholders(company_isin: str) -> list[dict]:
-    response = requests.get(
-        url='http://old.tsetmc.com/Loader.aspx',
-        params={
-            'c': company_isin,
-            'Partree': '15131T',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_shareholders(company_isin: str, response: str = None) -> list[dict]:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url='http://old.tsetmc.com/Loader.aspx',
+            params={
+                'c': company_isin,
+                'Partree': '15131T',
+            },
+            verify=False
+        )
+        response = response.text
+    
     soup = BeautifulSoup(response, 'lxml')
 
     shareholders = []
@@ -395,7 +397,7 @@ def get_symbol_shareholders(company_isin: str) -> list[dict]:
         name = tds[0].text.strip()
         count = int(tds[1].div['title'].replace(',', ''))
         percentage = float(tds[2].text)
-        change = locale.atoi(tds[3].text.strip())
+        change = locale.atoi(tds[3].text.strip().replace(',', ''))
 
         shareholders.append({
             'id': shareholder_id,
@@ -408,18 +410,18 @@ def get_symbol_shareholders(company_isin: str) -> list[dict]:
     return shareholders
 
 
-def get_symbol_shareholder_details(shareholder_id: str, company_isin: str):
-    response = requests.get(
-        url=f'http://old.tsetmc.com/tsev2/data/ShareHolder.aspx?i={shareholder_id}%2C{company_isin}',
-        params={
-            'i': f'{shareholder_id}%C{company_isin}',
-        },
-        verify=False,
-        timeout=20,
-    )
-    response.raise_for_status()
-    response = response.text
-
+def get_symbol_shareholder_details(shareholder_id: str, company_isin: str, response: str = None) -> dict:
+    if response is None:
+        response = safe_request(
+            method='GET',
+            url=f'http://old.tsetmc.com/tsev2/data/ShareHolder.aspx?i={shareholder_id}%2C{company_isin}',
+            params={
+                'i': f'{shareholder_id}%C{company_isin}',
+            },
+            verify=False
+        )
+        response = response.text
+    
     response = response.split(';')
 
     chart = []
@@ -443,3 +445,138 @@ def get_symbol_shareholder_details(shareholder_id: str, company_isin: str):
         'chart': chart,
         'portfolio': portfolio,
     }
+
+
+async def aio_get_symbol_intraday_price_chart(symbol_id: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/chart/data/IntraDayPrice.aspx',
+        params={'i': symbol_id},
+        verify=False
+    )
+    response = response.text
+    return get_symbol_intraday_price_chart(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_price_overview(symbol_id: str) -> dict:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/data/instinfodata.aspx',
+        params={
+            'i': symbol_id,
+            'c': 27,
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_price_overview(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_supervisor_messages(symbol_id: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/Loader.aspx',
+        params={
+            'i': symbol_id,
+            'Partree': '15131W',
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_supervisor_messages(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_daily_ticks_history(symbol_id: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/data/InstTradeHistory.aspx',
+        params={
+            'i': symbol_id,
+            'Top': 999999,
+            'A': 0,
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_daily_ticks_history(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_notifications(symbol_id: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/data/CodalTopNew.aspx',
+        params={
+            'i': symbol_id,
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_notifications(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_state_changes(symbol_id: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/Loader.aspx',
+        params={
+            'i': symbol_id,
+            'Partree': '15131L',
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_state_changes(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_id_details(symbol_id: str) -> dict:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/Loader.aspx',
+        params={
+            'i': symbol_id,
+            'Partree': '15131M',
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_id_details(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_traders_type_history(symbol_id: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/tsev2/data/clienttype.aspx',
+        params={
+            'i': symbol_id,
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_traders_type_history(symbol_id=symbol_id, response=response)
+
+
+async def aio_get_symbol_shareholders(company_isin: str) -> list[dict]:
+    response = await aio_safe_request(
+        method='GET',
+        url='http://old.tsetmc.com/Loader.aspx',
+        params={
+            'c': company_isin,
+            'Partree': '15131T',
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_shareholders(company_isin=company_isin, response=response)
+
+
+async def aio_get_symbol_shareholder_details(shareholder_id: str, company_isin: str) -> dict:
+    response = await aio_safe_request(
+        method='GET',
+        url=f'http://old.tsetmc.com/tsev2/data/ShareHolder.aspx?i={shareholder_id}%2C{company_isin}',
+        params={
+            'i': f'{shareholder_id}%C{company_isin}',
+        },
+        verify=False
+    )
+    response = response.text
+    return get_symbol_shareholder_details(shareholder_id=shareholder_id, company_isin=company_isin, response=response)
