@@ -1,5 +1,4 @@
-from jdatetime import date as jdate
-from jdatetime import time as jtime
+from jdatetime import date as jdate, datetime as jdatetime, time as jtime
 from pydantic import BaseModel
 
 from .group import SymbolGroupDataRow
@@ -27,10 +26,14 @@ class SymbolDailyPriceDataRow(SymbolPriceData):
 
 
 class SymbolPriceOverview(BaseModel):
+    datetime: jdatetime
     price_data: SymbolPriceData
     orderbook: SymbolOrderBookData
     traders_type: SymbolTradersTypeDataRow
     group_data: list[SymbolGroupDataRow]
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class SymbolIntraDayPriceChartDataRow(BaseModel):

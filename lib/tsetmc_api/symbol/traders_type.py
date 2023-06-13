@@ -1,3 +1,4 @@
+from jdatetime import date as jdate
 from pydantic import BaseModel
 
 
@@ -13,5 +14,9 @@ class SymbolTradersTypeInfo(BaseModel):
 
 
 class SymbolTradersTypeDataRow(BaseModel):
+    date: jdate
     legal: SymbolTradersTypeInfo
     real: SymbolTradersTypeInfo
+
+    class Config:
+        arbitrary_types_allowed = True

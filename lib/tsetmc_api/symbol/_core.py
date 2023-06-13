@@ -1,5 +1,6 @@
 import ast
 import locale
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -53,6 +54,8 @@ def get_symbol_price_overview(symbol_id: str) -> dict:
 
     # price section
     data = all_sections[0].split(',')
+    gregorian_datetime = datetime.strptime(f"{data[12]}{data[0]}", '%Y%m%d%H:%M:%S')
+    jalali_datetime = jdatetime.fromgregorian(datetime=gregorian_datetime)
     price_data = {
         'last': int(data[2]),
         'close': int(data[3]),
@@ -137,6 +140,7 @@ def get_symbol_price_overview(symbol_id: str) -> dict:
         })
 
     return {
+        'datetime': jalali_datetime,
         'price_data': price_data,
         'orderbook_data': orderbook,
         'traders_type_data': traders_type,
@@ -316,53 +320,47 @@ def get_symbol_id_details(symbol_id: str) -> dict:
 
 def get_symbol_traders_type_history(symbol_id: str) -> list[dict]:
     response = requests.get(
-        url='http://old.tsetmc.com/tsev2/data/clienttype.aspx',
+        url=f'http://cdn.tsetmc.com/api/ClientType/GetClientTypeHistory/{symbol_id}',
         params={
             'i': symbol_id,
+        },
+        headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
         },
         verify=False,
         timeout=20,
     )
     response.raise_for_status()
-    response = response.text
+    response = response.json()
 
     traders_type_history = []
-    raw_data = response.split(';')
+    raw_data = response['clientType']
     for row in raw_data:
-        (
-            dt,
-            r_buy_c, l_buy_c, r_sell_c, l_sell_c,
-            r_buy_v, l_buy_v, r_sell_v, l_sell_v,
-            r_buy_vl, l_buy_vl, r_sell_vl, l_sell_vl
-        ) = row.split(',')
+        gregorian_date = datetime.strptime(str(row['recDate']), '%Y%m%d').date()
         traders_type_history.append({
-            'date': jdate.fromgregorian(
-                year=int(dt[:4]),
-                month=int(dt[4:6]),
-                day=int(dt[6:]),
-            ),
+            'date': jdate.fromgregorian(date=gregorian_date),
             'legal': {
                 'buy': {
-                    'value': l_buy_vl,
-                    'volume': l_buy_v,
-                    'count': l_buy_c,
+                    'value': row['buy_N_Value'],
+                    'volume': row['buy_N_Volume'],
+                    'count': row['buy_N_Count'],
                 },
                 'sell': {
-                    'value': l_sell_vl,
-                    'volume': l_sell_v,
-                    'count': l_sell_c,
+                    'value': row['sell_N_Value'],
+                    'volume': row['sell_N_Volume'],
+                    'count': row['sell_N_Count'],
                 }
             },
             'real': {
                 'buy': {
-                    'value': r_buy_vl,
-                    'volume': r_buy_v,
-                    'count': r_buy_c,
+                    'value': row['buy_I_Value'],
+                    'volume': row['buy_I_Volume'],
+                    'count': row['buy_I_Count'],
                 },
                 'sell': {
-                    'value': r_sell_vl,
-                    'volume': r_sell_v,
-                    'count': r_sell_c,
+                    'value': row['sell_I_Value'],
+                    'volume': row['sell_I_Volume'],
+                    'count': row['sell_I_Count'],
                 }
             },
         })

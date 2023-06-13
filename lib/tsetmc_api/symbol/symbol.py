@@ -49,6 +49,7 @@ class Symbol:
         )
 
         traders_type = SymbolTradersTypeDataRow(
+            date=raw_data['datetime'].date(),
             legal=SymbolTradersTypeInfo(
                 buy=SymbolTradersTypeSubInfo(
                     count=raw_data['traders_type_data']['legal']['buy']['count'],
@@ -85,6 +86,7 @@ class Symbol:
         ) for row in raw_data['group_data']]
 
         return SymbolPriceOverview(
+            datetime=raw_data['datetime'],
             price_data=tick,
             orderbook=orderbook,
             traders_type=traders_type,
@@ -212,6 +214,7 @@ class Symbol:
         raw_data = _core.get_symbol_traders_type_history(symbol_id=self.symbol_id)
 
         traders_type_history = [SymbolTradersTypeDataRow(
+            date=row['date'],
             legal=SymbolTradersTypeInfo(
                 buy=SymbolTradersTypeSubInfo(
                     count=row['legal']['buy']['count'],
