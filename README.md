@@ -66,3 +66,7 @@ Tsetmc sometimes returns 403 and you should retry.
 ## Support and Donation
 
 If this repository helped you, please support it by giving a star (:star:).
+
+For contacting me about this project please use the following email:
+
+[mahdi74sadeghi+tsetmc_api@gmail.com](mailto:mahdi74sadeghi+tsetmc_api@gmail.com)
