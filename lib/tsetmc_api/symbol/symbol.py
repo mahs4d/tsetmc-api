@@ -22,6 +22,7 @@ class Symbol:
         raw_data = _core.get_symbol_price_overview(symbol_id=self.symbol_id)
 
         tick = SymbolPriceData(
+            datetime=raw_data['price_data']['datetime'],
             last=raw_data['price_data']['last'],
             close=raw_data['price_data']['close'],
             open=raw_data['price_data']['open'],
@@ -49,6 +50,7 @@ class Symbol:
         )
 
         traders_type = SymbolTradersTypeDataRow(
+            date=raw_data['price_data']['datetime'].date(),
             legal=SymbolTradersTypeInfo(
                 buy=SymbolTradersTypeSubInfo(
                     count=raw_data['traders_type_data']['legal']['buy']['count'],
@@ -212,6 +214,7 @@ class Symbol:
         raw_data = _core.get_symbol_traders_type_history(symbol_id=self.symbol_id)
 
         traders_type_history = [SymbolTradersTypeDataRow(
+            date=row['date'],
             legal=SymbolTradersTypeInfo(
                 buy=SymbolTradersTypeSubInfo(
                     count=row['legal']['buy']['count'],

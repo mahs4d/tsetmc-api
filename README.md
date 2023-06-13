@@ -61,6 +61,7 @@ Tsetmc sometimes returns 403 and you should retry.
 - [x] Migrate `day_details` component to use new tsetmc.
 - [x] Migrate `market_map` component to use new tsetmc.
 - [x] Migrate `group` component to use new tsetmc.
+- [ ] Support asyncio.
 
 ## Support and Donation
 
