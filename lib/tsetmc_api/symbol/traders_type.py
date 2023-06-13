@@ -1,5 +1,5 @@
 from jdatetime import date as jdate
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class SymbolTradersTypeSubInfo(BaseModel):

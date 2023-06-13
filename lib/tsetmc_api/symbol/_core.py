@@ -55,8 +55,8 @@ def get_symbol_price_overview(symbol_id: str) -> dict:
     # price section
     data = all_sections[0].split(',')
     gregorian_datetime = datetime.strptime(f"{data[12]}{data[0]}", '%Y%m%d%H:%M:%S')
+    jalali_datetime = jdatetime.fromgregorian(datetime=gregorian_datetime)
     price_data = {
-        'datetime': jdatetime.fromgregorian(datetime=gregorian_datetime),
         'last': int(data[2]),
         'close': int(data[3]),
         'open': int(data[4]),
@@ -140,6 +140,7 @@ def get_symbol_price_overview(symbol_id: str) -> dict:
         })
 
     return {
+        'datetime': jalali_datetime,
         'price_data': price_data,
         'orderbook_data': orderbook,
         'traders_type_data': traders_type,
