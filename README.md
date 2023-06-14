@@ -12,13 +12,14 @@ You can install this library using the following command:
 
 You can find examples of using each component in `examples` directory.
 
-| Component    | Example File                                                |
-|--------------|-------------------------------------------------------------|
-| Symbol       | [symbol_example.py](examples/symbol_example.py)             |
-| Market Watch | [market_watch_example.py](examples/market_watch_example.py) |
-| Day Details  | [day_details_example.py](examples/day_details_example.py)   |
-| Market Map   | [market_map_example.py](examples/market_map_example.py)     |
-| Group        | [group_example.py](examples/group_example.py)               |
+| Component    | Example File                                                                                                 |
+|--------------|--------------------------------------------------------------------------------------------------------------|
+| Symbol       | [symbol_example.py](https://github.com/mahs4d/tsetmc-api/blob/master/examples/symbol_example.py)             |
+| Market Watch | [market_watch_example.py](https://github.com/mahs4d/tsetmc-api/blob/master/examples/market_watch_example.py) |
+| Day Details  | [day_details_example.py](https://github.com/mahs4d/tsetmc-api/blob/master/examples/day_details_example.py)   |
+| Market Map   | [market_map_example.py](https://github.com/mahs4d/tsetmc-api/blob/master/examples/market_map_example.py)     |
+| Group        | [group_example.py](https://github.com/mahs4d/tsetmc-api/blob/master/examples/group_example.py)               |
+| Async        | [async_example.py](https://github.com/mahs4d/tsetmc-api/blob/master/examples/async_example.py)               |
 
 ## Usage
 
@@ -54,6 +55,11 @@ Group component currently only has one function (`get_all_groups`) which returns
 
 Tsetmc sometimes returns 403 and you should retry.
 
+### Async Support
+
+Each method in the library has an async counterpart with the same name and a `_async` suffix.
+These methods use the sync functions behind the scene in an asyncio pool executor.
+
 ### TODO
 
 - [ ] Migrate `symbol` component to use new tsetmc.
@@ -61,7 +67,7 @@ Tsetmc sometimes returns 403 and you should retry.
 - [x] Migrate `day_details` component to use new tsetmc.
 - [x] Migrate `market_map` component to use new tsetmc.
 - [x] Migrate `group` component to use new tsetmc.
-- [ ] Support asyncio.
+- [x] Support asyncio.
 
 ## Support and Donation
 

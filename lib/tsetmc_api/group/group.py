@@ -5,6 +5,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 from . import _core
+from ..utils import run_sync_function
 
 
 class GroupType(Enum):
@@ -33,3 +34,13 @@ class Group(BaseModel):
             description=row['description'],
             type=GroupType.PAPER if row['type'] == 'PaperType' else GroupType.INDUSTRIAL,
         ) for row in raw_data]
+
+    @staticmethod
+    async def get_all_groups_async() -> list[Group]:
+        """
+        returns list of symbol groups
+        """
+
+        return await run_sync_function(
+            func=Group.get_all_groups,
+        )

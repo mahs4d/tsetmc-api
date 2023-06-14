@@ -4,6 +4,7 @@ from jdatetime import date as jdate
 from pydantic import BaseModel, PrivateAttr
 
 from . import _core
+from ..utils import run_sync_function
 
 
 class SymbolShareHolderPortfolioRow(BaseModel):
@@ -39,6 +40,15 @@ class SymbolShareHolder(BaseModel):
             shares_percentage=row['shares_percentage'],
         ) for row in raw_data]
 
+    async def get_portfolio_data_async(self) -> list[SymbolShareHolderPortfolioRow]:
+        """
+        returns list of companies owned by this shareholder
+        """
+
+        return await run_sync_function(
+            func=self.get_portfolio_data,
+        )
+
 
 class SymbolShareHolderChartRow(BaseModel):
     date: jdate
@@ -68,3 +78,12 @@ class SymbolShareHolderDataRow(BaseModel):
             date=row['date'],
             shares_count=row['shares_count'],
         ) for row in raw_data]
+
+    async def get_chart_data_async(self) -> list[SymbolShareHolderChartRow]:
+        """
+        returns list of changes to shareholders share count in history of this symbol
+        """
+
+        return await run_sync_function(
+            func=self.get_chart_data,
+        )
