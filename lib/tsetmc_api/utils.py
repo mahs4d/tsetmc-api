@@ -1,4 +1,7 @@
+import asyncio
 from copy import deepcopy
+from functools import partial
+from typing import Callable, Any
 
 from jdatetime import date as jdate, time as jtime
 
@@ -33,4 +36,12 @@ def convert_deven_to_jdate(deven: int) -> jdate:
         year=int(deven[:4]),
         month=int(deven[4:6]),
         day=int(deven[6:]),
+    )
+
+
+async def run_sync_function(func: Callable, *args, **kwargs) -> Any:
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        executor=None,
+        func=partial(func, *args, **kwargs),
     )

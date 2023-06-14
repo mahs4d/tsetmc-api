@@ -3,7 +3,7 @@ from .daily_history import WatchDailyHistoryDataRow
 from .orderbook import WatchOrderBook, WatchOrderBookRow
 from .price import WatchPriceDataRow
 from .traders_type import WatchTradersTypeDataRow, WatchTradersTypeInfo, WatchTradersTypeSubInfo
-from ..utils import deep_update
+from ..utils import deep_update, run_sync_function
 
 
 class MarketWatch:
@@ -71,6 +71,15 @@ class MarketWatch:
 
         return watch_data
 
+    async def get_price_data_async(self) -> dict[str, WatchPriceDataRow]:
+        """
+        gets basic price information (in "didbane bazar" page)
+        """
+
+        return await run_sync_function(
+            func=self.get_price_data,
+        )
+
     def get_traders_type_data(self) -> dict[str, WatchTradersTypeDataRow]:
         """
         gets traders type data (in "didebane bazar" page)
@@ -105,6 +114,15 @@ class MarketWatch:
 
         return watch_data
 
+    async def get_traders_type_data_async(self) -> dict[str, WatchTradersTypeDataRow]:
+        """
+        gets traders type data (in "didebane bazar" page)
+        """
+
+        return await run_sync_function(
+            func=self.get_traders_type_data,
+        )
+
     def get_daily_history_data(self) -> dict[str, list[WatchDailyHistoryDataRow]]:
         """
         gets 30 day history of symbols (in "didbane bazar" page)
@@ -129,10 +147,30 @@ class MarketWatch:
 
         return watch_data
 
+    async def get_daily_history_data_async(self) -> dict[str, list[WatchDailyHistoryDataRow]]:
+        """
+        gets 30 day history of symbols (in "didbane bazar" page)
+        """
+
+        return await run_sync_function(
+            func=self.get_daily_history_data,
+        )
+
     def get_raw_stats_data(self) -> dict[list]:
         """
         returns a list of stats for each symbol. refer to tsetmc.com for information of what each item in the list is
         """
+
+        return _core.get_watch_raw_stats_data()
+
+    async def get_raw_stats_data_async(self) -> dict[list]:
+        """
+        returns a list of stats for each symbol. refer to tsetmc.com for information of what each item in the list is
+        """
+
+        return await run_sync_function(
+            func=self.get_raw_stats_data,
+        )
 
     def get_stats_data(self) -> dict[dict]:
         """
@@ -140,3 +178,12 @@ class MarketWatch:
         """
 
         return _core.get_watch_stats_data()
+
+    async def get_stats_data_async(self) -> dict[dict]:
+        """
+        !!! EXPERIMENTAL: returns stats in dict, may be wrong !!!
+        """
+
+        return await run_sync_function(
+            func=self.get_stats_data,
+        )

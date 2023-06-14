@@ -8,6 +8,7 @@ from .shareholder import SymbolShareHolderDataRow, SymbolShareHolder
 from .state_change import SymbolStateChangeDataRow
 from .supervisor_message import SymbolSupervisorMessageDataRow
 from .traders_type import SymbolTradersTypeDataRow, SymbolTradersTypeInfo, SymbolTradersTypeSubInfo
+from ..utils import run_sync_function
 
 
 class Symbol:
@@ -93,6 +94,15 @@ class Symbol:
             group_data=group_data,
         )
 
+    async def get_price_overview_async(self) -> SymbolPriceOverview:
+        """
+        gets the last price overview of the symbol and returns most of the information (in "dar yek negah" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_price_overview,
+        )
+
     def get_intraday_price_chart_data(self) -> list[SymbolIntraDayPriceChartDataRow]:
         """
         gets last days intraday price chart (in "dar yek negah" tab)
@@ -111,6 +121,15 @@ class Symbol:
 
         return ticks
 
+    async def get_intraday_price_chart_data_async(self) -> list[SymbolIntraDayPriceChartDataRow]:
+        """
+        gets last days intraday price chart (in "dar yek negah" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_intraday_price_chart_data,
+        )
+
     def get_supervisor_messages_data(self) -> list[SymbolSupervisorMessageDataRow]:
         """
         get list of supervisor messages (in "payame nazer" tab)
@@ -126,6 +145,15 @@ class Symbol:
 
         return messages
 
+    async def get_supervisor_messages_data_async(self) -> list[SymbolSupervisorMessageDataRow]:
+        """
+        get list of supervisor messages (in "payame nazer" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_supervisor_messages_data,
+        )
+
     def get_notifications_data(self) -> list[SymbolNotificationsDataRow]:
         """
         get list of notifications (in "etelaiye ha" tab)
@@ -140,6 +168,15 @@ class Symbol:
 
         return notifications
 
+    async def get_notifications_data_async(self) -> list[SymbolNotificationsDataRow]:
+        """
+        get list of notifications (in "etelaiye ha" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_notifications_data,
+        )
+
     def get_state_changes_data(self) -> list[SymbolStateChangeDataRow]:
         """
         get list of state changes (in "taghire vaziat" tab)
@@ -153,6 +190,15 @@ class Symbol:
         ) for row in raw_data]
 
         return state_changes
+
+    async def get_state_changes_data_async(self) -> list[SymbolStateChangeDataRow]:
+        """
+        get list of state changes (in "taghire vaziat" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_state_changes_data,
+        )
 
     def get_daily_history(self) -> list[SymbolDailyPriceDataRow]:
         """
@@ -175,6 +221,15 @@ class Symbol:
         ) for row in raw_data]
 
         return ticks
+
+    async def get_daily_history_async(self) -> list[SymbolDailyPriceDataRow]:
+        """
+        get list of daily ticks history (in "sabeghe" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_daily_history,
+        )
 
     def get_id_details(self) -> SymbolIdDetails:
         """
@@ -205,6 +260,15 @@ class Symbol:
         )
 
         return details
+
+    async def get_id_details_async(self) -> SymbolIdDetails:
+        """
+        gets symbol identity details and returns all the information (in "shenase" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_id_details,
+        )
 
     def get_traders_type_history(self) -> list[SymbolTradersTypeDataRow]:
         """
@@ -243,6 +307,15 @@ class Symbol:
 
         return traders_type_history
 
+    async def get_traders_type_history_async(self) -> list[SymbolTradersTypeDataRow]:
+        """
+        returns daily traders type history (in "haghihi-hoghooghi" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_traders_type_history,
+        )
+
     def get_shareholders_data(self) -> list[SymbolShareHolderDataRow]:
         """
         returns list of major shareholders (in "saham daran" tab)
@@ -263,3 +336,12 @@ class Symbol:
         ) for row in raw_data]
 
         return shareholders
+
+    async def get_shareholders_data_async(self) -> list[SymbolShareHolderDataRow]:
+        """
+        returns list of major shareholders (in "saham daran" tab)
+        """
+
+        return await run_sync_function(
+            func=self.get_shareholders_data,
+        )

@@ -7,6 +7,7 @@ from .shareholder import DayDetailsShareHolderDataRow, DayDetailsShareHolder
 from .threshold import DayDetailsThresholdsData
 from .trade import DayDetailsTradeDataRow
 from .traders_type import DayDetailsTradersTypeData, DayDetailsTradersTypeInfo, DayDetailsTradersTypeSubInfo
+from ..utils import run_sync_function
 
 
 class DayDetails:
@@ -34,6 +35,15 @@ class DayDetails:
             value=raw_data['value'],
         )
 
+    async def get_price_overview_async(self) -> DayDetailsPriceOverview:
+        """
+        returns an overview of price information for that day
+        """
+
+        return await run_sync_function(
+            func=self.get_price_overview,
+        )
+
     def get_price_data(self) -> list[DayDetailsPriceDataRow]:
         """
         returns instant prices (for each time in that date)
@@ -49,6 +59,15 @@ class DayDetails:
             volume=row['volume'],
             count=row['count'],
         ) for row in raw_data]
+
+    async def get_price_data_async(self) -> list[DayDetailsPriceDataRow]:
+        """
+        returns instant prices (for each time in that date)
+        """
+
+        return await run_sync_function(
+            func=self.get_price_data,
+        )
 
     def get_orderbook_data(self) -> list[DayDetailsOrderBookDataRow]:
         """
@@ -72,6 +91,15 @@ class DayDetails:
                 volume=row['volume'],
             ) for row in data['sell_rows']],
         ) for data in raw_data]
+
+    async def get_orderbook_data_async(self) -> list[DayDetailsOrderBookDataRow]:
+        """
+        returns instant orderbooks (for each time in that date)
+        """
+
+        return await run_sync_function(
+            func=self.get_orderbook_data,
+        )
 
     def get_traders_type_data(self) -> DayDetailsTradersTypeData:
         """
@@ -107,6 +135,15 @@ class DayDetails:
             ),
         )
 
+    async def get_traders_type_data_async(self) -> DayDetailsTradersTypeData:
+        """
+        returns traders type information for that day
+        """
+
+        return await run_sync_function(
+            func=self.get_traders_type_data,
+        )
+
     def get_trades_data(self, summarize: bool = False) -> list[DayDetailsTradeDataRow]:
         """
         gets all trade data
@@ -120,7 +157,21 @@ class DayDetails:
             volume=row['volume'],
         ) for row in raw_data]
 
+    async def get_trades_data_async(self, summarize: bool = False) -> list[DayDetailsTradeDataRow]:
+        """
+        gets all trade data
+        """
+
+        return await run_sync_function(
+            func=self.get_trades_data,
+            summarize=summarize,
+        )
+
     def get_thresholds_data(self) -> list[DayDetailsThresholdsData]:
+        """
+        Get allowed price window
+        """
+
         raw_data = _core.get_day_details_thresholds_data(symbol_id=self.symbol_id, date=self.date)
 
         return [DayDetailsThresholdsData(
@@ -128,6 +179,15 @@ class DayDetails:
             range_max=row['max'],
             range_min=row['min'],
         ) for row in raw_data]
+
+    async def get_thresholds_data_async(self) -> list[DayDetailsThresholdsData]:
+        """
+        Get allowed price window
+        """
+
+        return await run_sync_function(
+            func=self.get_thresholds_data,
+        )
 
     def get_shareholders_data(self) -> tuple[list[DayDetailsShareHolderDataRow], list[DayDetailsShareHolderDataRow]]:
         """
@@ -143,8 +203,8 @@ class DayDetails:
             symbol_id=self.symbol_id,
             date=self.date,
             shareholder=DayDetailsShareHolder(id=row['id'], name=row['name']),
-            count=row['count'],
-            percentage=row['percentage'],
+            shares_count=row['shares_count'],
+            shares_percentage=row['shares_percentage'],
         ) for row in raw_old_shareholders]
 
         new_shareholders = [DayDetailsShareHolderDataRow(
@@ -156,3 +216,15 @@ class DayDetails:
         ) for row in raw_new_shareholders]
 
         return old_shareholders, new_shareholders
+
+    async def get_shareholders_data_async(self) -> tuple[
+        list[DayDetailsShareHolderDataRow],
+        list[DayDetailsShareHolderDataRow],
+    ]:
+        """
+        gets list of shareholders before and after the day
+        """
+
+        return await run_sync_function(
+            func=self.get_shareholders_data,
+        )

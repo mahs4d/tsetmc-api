@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from pydantic.utils import deep_update
 
 from . import _core
+from ..utils import run_sync_function
 
 
 class MapDataRow(BaseModel):
@@ -64,3 +65,14 @@ class MarketMap:
         ) for key, data in raw_data.items()}
 
         return map_data
+
+    async def get_market_map_data_async(self, map_type: MapType = MapType.MARKET_VALUE) -> dict[str, MapDataRow]:
+        """
+        returns symbol data in market map (in "naghshe bazar" page)
+        !!! webserver occasionally throws 403 error, you should retry in a few seconds when this happens
+        """
+
+        return await run_sync_function(
+            func=self.get_market_map_data,
+            map_type=map_type,
+        )

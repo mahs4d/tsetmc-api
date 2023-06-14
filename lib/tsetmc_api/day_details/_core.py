@@ -227,7 +227,7 @@ def get_day_details_shareholders_data(symbol_id: str, date: jdate) -> tuple[list
             'shares_percentage': row['perOfShares'],
         }
 
-        if row['dEven'] < it:
+        if row['dEven'] <= it:
             old_shareholders.append(sh_data)
         else:
             new_shareholders.append(sh_data)

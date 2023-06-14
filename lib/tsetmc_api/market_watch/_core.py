@@ -267,7 +267,7 @@ def get_watch_traders_type_data() -> dict:
 
 def get_watch_daily_history_data() -> dict:
     response = requests.get(
-        url='http://members.tsetmc.com/tsev2/data/ClosingPriceAll.aspx',
+        url='https://members.tsetmc.com/tsev2/data/ClosingPriceAll.aspx',
         params={},
         verify=False,
         timeout=20,

@@ -393,7 +393,7 @@ def get_symbol_shareholders(company_isin: str) -> list[dict]:
         name = tds[0].text.strip()
         count = int(tds[1].div['title'].replace(',', ''))
         percentage = float(tds[2].text)
-        change = locale.atoi(tds[3].text.strip())
+        change = locale.atoi(tds[3].text.replace(',', '').strip())
 
         shareholders.append({
             'id': shareholder_id,
