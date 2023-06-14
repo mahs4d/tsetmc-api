@@ -120,12 +120,14 @@ class DayDetails:
             volume=row['volume'],
         ) for row in raw_data]
 
-    def get_thresholds_data(self) -> DayDetailsThresholdsData:
+    def get_thresholds_data(self) -> list[DayDetailsThresholdsData]:
         raw_data = _core.get_day_details_thresholds_data(symbol_id=self.symbol_id, date=self.date)
-        return DayDetailsThresholdsData(
-            range_max=raw_data['max'],
-            range_min=raw_data['min'],
-        )
+
+        return [DayDetailsThresholdsData(
+            time=row['time'],
+            range_max=row['max'],
+            range_min=row['min'],
+        ) for row in raw_data]
 
     def get_shareholders_data(self) -> tuple[list[DayDetailsShareHolderDataRow], list[DayDetailsShareHolderDataRow]]:
         """

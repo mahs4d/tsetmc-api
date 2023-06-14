@@ -181,7 +181,7 @@ def get_day_details_traders_type_data(symbol_id: str, date: jdate) -> dict:
     }
 
 
-def get_day_details_thresholds_data(symbol_id: str, date: jdate) -> dict:
+def get_day_details_thresholds_data(symbol_id: str, date: jdate) -> list[dict]:
     t = date.togregorian().strftime('%Y%m%d')
     response = requests.get(
         url=f'http://cdn.tsetmc.com/api/MarketData/GetStaticThreshold/{symbol_id}/{t}',
@@ -195,10 +195,11 @@ def get_day_details_thresholds_data(symbol_id: str, date: jdate) -> dict:
     response.raise_for_status()
     response = response.json()['staticThreshold']
 
-    return {
-        'max': response[1]['psGelStaMax'],
-        'min': response[1]['psGelStaMin'],
-    }
+    return [{
+        'time': convert_heven_to_jtime(rsp['hEven']),
+        'max': rsp['psGelStaMax'],
+        'min': rsp['psGelStaMin'],
+    } for rsp in response]
 
 
 def get_day_details_shareholders_data(symbol_id: str, date: jdate) -> tuple[list[dict], list[dict]]:

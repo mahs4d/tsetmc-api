@@ -17,12 +17,14 @@ def deep_update(d1: dict, d2: dict) -> dict:
     return ret
 
 
-def convert_heven_to_jtime(heven: int) -> jtime:
+def convert_heven_to_jtime(heven: int | str) -> jtime | None:
     heven = str(heven)
     if len(heven) == 6:
         return jtime(hour=int(heven[:2]), minute=int(heven[2:4]), second=int(heven[4:]))
-    else:
+    elif len(heven) == 5:
         return jtime(hour=int(heven[:1]), minute=int(heven[1:3]), second=int(heven[3:]))
+    else:
+        return None
 
 
 def convert_deven_to_jdate(deven: int) -> jdate:
